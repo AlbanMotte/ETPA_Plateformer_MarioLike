@@ -1,6 +1,6 @@
 # ETPA_Plateformer_MarioLike
 
-Le Document PDF est un doc récapitulatif de mon projet. On y retrouve :
+Le Document PDF "Projet de Sidescroller “Mario-Like” CONCEPT" est un document récapitulatif de mon projet. On y retrouve :
 
 - Le Scénario
 - Le Gameplay
