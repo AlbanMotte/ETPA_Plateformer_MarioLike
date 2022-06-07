@@ -1,0 +1,3978 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>PlateformerMarioLike</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+
+<body>
+    <script type="text/javascript">
+
+
+        //Ecran d'acceuil
+
+        class EcranAcceuil extends Phaser.Scene {
+            constructor() {
+
+                super("EcranAcceuil")
+                this.cursors;
+            }
+
+            preload() {
+                this.load.image('ecranAcceuil', 'assets/Acceuil.png')
+            }
+
+            create() {
+                this.ecranAccueil = this.physics.add.staticGroup();
+                this.ecranAccueil.create(400, 300, 'ecranAcceuil')
+
+                this.cursors = this.input.keyboard.createCursorKeys();
+            }
+
+            //Changement de scène
+            update() {
+                if (this.cursors.space.isDown) {
+                    this.scene.start('Intro')
+                }
+            }
+        }
+
+        ////////////////////////////////////////INTRO////////////////////////////////////////
+        class Intro extends Phaser.Scene {
+            constructor() {
+                super("Intro");
+                this.player;
+                this.cursors;
+                this.gameOver = false;
+                this.cameras;
+                this.inventaire;
+                //Phasmopedia
+                this.phasmoItem;
+                this.phasmopedia;
+                this.phasmoLogo;
+                this.phasmoActive = false;
+                this.phasmopediaLivre;
+                this.vieJoueur = 5;
+                this.recupL=false;
+                this.livrecree=false;
+
+                this.texte1;
+
+            }
+
+            preload() {
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.image('assetsIntro', 'assets/NivIntro.png');
+                this.load.tilemapTiledJSON('intro', 'Intro..json');
+                this.load.spritesheet('miniPhasmo', 'assets/Phasmopedia.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.image('phasmopediaImage', 'assets/LivreOuvert.png');
+                this.load.image('logoPhasmo', 'assets/LogoPhasmo.png');
+                this.load.spritesheet('texte1', 'assets/Texte1.png',
+                {frameWidth : 198, frameHeight : 86});
+                this.load.spritesheet('texte2', 'assets/Texte2-Sheet.png',
+                {frameWidth : 634, frameHeight : 78});
+            }
+
+            create() {
+
+                //Tiled
+                this.intro = this.add.tilemap('intro');
+                this.tileset = this.intro.addTilesetImage(
+                    "NivIntro",
+                    "assetsIntro"
+                );
+
+                this.ciel = this.intro.createLayer(
+                    "Ciel",
+                    this.tileset
+                )
+
+                this.arrierePlan = this.intro.createLayer(
+                    "ArrierePlan",
+                    this.tileset
+                )
+
+                this.deuxiemePlan = this.intro.createLayer(
+                    "DeuxiemePlan",
+                    this.tileset
+                )
+
+                this.colliders = this.intro.createLayer(
+                    "Colliders",
+                    this.tileset
+                );
+
+                this.premierPlan = this.intro.createLayer(
+                    "PremierPlan",
+                    this.tileset
+                ).setDepth(10);
+
+                this.ciel.setScale(1.5);
+                this.arrierePlan.setScale(1.5);
+                this.deuxiemePlan.setScale(1.5);
+                this.premierPlan.setScale(1.5);
+                this.colliders.setScale(1.5);
+
+                this.colliders.setCollisionByProperty({ estSolide: true });
+
+                //Colliders et autre
+                this.player = this.physics.add.sprite(74.9, 406.5, 'player').setScale(1.5).refreshBody();
+                this.player.body.setSize(20,27,true)
+                this.player.setOffset(8, 6);
+                this.player.setCollideWorldBounds(true);
+                this.physics.add.collider(this.player, this.colliders);
+                this.cursors = this.input.keyboard.createCursorKeys();
+
+                //Textes
+                this.texte1 = this.physics.add.staticGroup();
+                this.texte1 = this.physics.add.sprite(341, 300, 'texte1').setScale(0.3);
+                this.texte1.body.allowGravity = false;
+
+                this.texte2 = this.physics.add.staticGroup();
+                this.texte2 = this.physics.add.sprite(984, 300, 'texte2').setScale(0.3);
+                this.texte2.body.allowGravity = false;
+
+                this.anims.create({
+                    key: 'idleRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'idleLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 15, end: 22 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 8, end: 14 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+
+                //Textes
+                this.anims.create({
+                    key: 'frameTexte1',
+                    frames : this.anims.generateFrameNumbers('texte1', { start : 0, end : 1}),
+                    frameRate : 5,
+                    repeat : -1,
+                })
+
+                this.anims.create({
+                    key: 'frameTexte2',
+                    frames : this.anims.generateFrameNumbers('texte2', { start : 0, end : 1}),
+                    frameRate : 5,
+                    repeat : -1,
+                })
+
+                //Camera
+                this.cameras.main.setBounds(0, 0, 1920, 624);
+                this.cameras.main.setSize(800, 600);
+                this.cameras.main.startFollow(this.player);
+
+                //Touches
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.keys = this.input.keyboard.addKeys({
+                    p: Phaser.Input.Keyboard.KeyCodes.P,
+                    z: Phaser.Input.Keyboard.KeyCodes.Z,
+                    m: Phaser.Input.Keyboard.KeyCodes.M
+
+                });
+
+                //Phasmopedia
+                this.phasmoItem = this.physics.add.staticGroup();
+                this.Phasmo = this.phasmoItem.create(1731.6, 406.5, 'miniPhasmo').setScale(0.7);
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+
+                
+                this.physics.add.overlap(this.player,this.phasmoItem,this.recupPhasmo,null,this);
+
+                this.anims.create({
+                    key: 'float',
+                    frames: this.anims.generateFrameNumbers('miniPhasmo', { start: 0, end: 8 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+
+                this.physics.world.setBounds(0,0, 1920, 624)
+
+            }
+            
+            //recup du Phasmopedia
+            recupPhasmo(player, Phasmo) {
+                Phasmo.destroy();
+                this.recupL=true;
+            }
+
+            update() {
+
+                //Coordonnées
+                console.log(this.player.x, this.player.y)
+
+                if (this.cursors.right.isDown){
+                    this.player.direction == 'right';
+                }
+                if (this.cursors.left.isDown){
+                    this.player.direction == 'left';
+                }
+
+                //Déplacement et Changement de scène
+                if (this.cursors.left.isDown) {
+                    this.player.direction = 'left';
+                    this.player.setVelocityX(-100);
+                    this.player.anims.play('walkLeft', true);
+                }
+                else if (this.cursors.right.isDown) {
+                    this.player.direction = 'right';
+                    this.player.setVelocityX(100);
+                    this.player.anims.play('walkRight', true);
+                }
+                else {
+                    if (this.player.direction == 'left'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleLeft', true);
+                    }
+                    if (this.player.direction == 'right'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleRight', true);
+                    }
+                }
+                if (Phaser.Input.Keyboard.JustDown(this.keys.z) && this.player.body.onFloor()) {
+                    this.player.setVelocityY(-200);
+                };
+
+                //Textes
+                this.texte1.anims.play('frameTexte1', true);
+                this.texte2.anims.play('frameTexte2', true);
+
+                //Changement de scène
+                if (this.player.x >= 1884 && this.player.y <= 406.5) {
+                    this.scene.start('TestSallePorte');
+                }
+
+                //Anim du Phasmopedia
+                if(this.recupL==false){
+                    this.Phasmo.anims.play('float', true);
+                }
+                //Apparition du Phasmopedia
+                if (this.recupL == true){
+                    this.LogoP = this.phasmoLogo.create(700, 40, 'logoPhasmo');
+                    this.LogoP.setScrollFactor(0);
+                }
+                //Apparition du Phasmo
+                if (this.recupL==true && Phaser.Input.Keyboard.JustDown(this.keys.p) && this.phasmoActive==false && this.livrecree==false){
+                    this.phasmoActive = true;
+                    this.phasmopediaLivre = this.phasmopedia.create(400, 300, 'phasmopediaImage');
+                    this.phasmopediaLivre.setScrollFactor(0);
+                    this.phasmopediaLivre.setDepth(20);
+                    this.livrecree=true;
+                }
+                if (Phaser.Input.Keyboard.JustDown(this.keys.m) && this.phasmoActive == true){
+                    this.phasmopediaLivre.destroy();
+                    this.phasmoActive = false;
+                    this.livrecree=false;
+                }
+
+                //Direction du Tir
+                if (this.cursors.right.isDown){
+                    this.player.direction == 'right';
+                }
+                if (this.cursors.left.isDown){
+                    this.player.direction == 'left';
+                }
+
+            }
+        }
+
+        ////////////////////////////////////////SALLE GRANDE PORTE////////////////////////////////////////
+        class TestSallePorte extends Phaser.Scene {
+            constructor() {
+                super("TestSallePorte");
+                //Général
+                this.player;
+                this.cursors;
+                this.gameOver = false;
+                this.cameras;
+                this.vieJoueur = 5;
+                this.vieJoueurMax = 5;
+                this.BarresdeVie;
+                this.inventaire;
+                //Phasmopedia
+                this.phasmoItem;
+                this.phasmopedia;
+                this.phasmoLogo;
+                this.phasmoActive = false;
+                this.phasmopediaLivre;
+                this.recupL=true;
+                this.livrecree=false;
+                //Tir
+                this.tir = false;
+                this.proj;
+                this.proj2;
+                this.carteVierge;
+                this.recupC = false;
+                //Mob
+                this.mob1;
+                this.mobSpawn = true;
+                this.mob1Kill = false,
+                this.mobDead = false;
+                this.carteMobTest;
+                this.dropMob = true;
+                this.CarteMob1Recup = false;
+                //Frame invul
+                this.invincible = false,
+                this.timerInvincible = 100;
+            }
+
+            preload() {
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.image('assetsGrandePorte', 'assets/GrandePorte.png');
+                this.load.tilemapTiledJSON('salleGrandePorte', 'SalleGrandePorte.json');
+                this.load.image('phasmopediaImage', 'assets/phasmopediaTEST.png');
+                this.load.image('logoPhasmo', 'assets/LogoPhasmo.png');
+                this.load.spritesheet('carteVierge', 'assets/AnimationCarteVierge.png',
+                    {frameWidth : 32, frameHeight : 40});
+                this.load.image('projoCarte', 'assets/ProjCarte.png');
+                this.load.image('projoCarte2', 'assets/ProjCarteGauche.png');
+                this.load.image('logoCarte', 'assets/LogoCarteVierge.png');
+                this.load.image('Mob1', 'assets/EnfantMonstre.png');
+                this.load.image('CarteMob1', 'assets/CarteEnfant.png');
+                this.load.spritesheet('BarreDeVie', 'assets/BarreDeVie.png',
+                    { frameWidth : 134, frameHeight : 36})
+                this.load.spritesheet('FrameCartes', 'assets/ItemFramecartes.png',
+                {frameWidth : 128, frameHeight : 32})
+
+                this.load.spritesheet('texte3', 'assets/Texte3-Sheet.png', 
+                {frameWidth : 644, frameHeight : 79})
+            }
+
+            create() {
+
+                //Map Tiled
+                this.salleGrandePorte = this.add.tilemap('salleGrandePorte');
+                this.tileset = this.salleGrandePorte.addTilesetImage(
+                    "GrandePorte",
+                    "assetsGrandePorte",
+                );
+
+                this.fond = this.salleGrandePorte.createLayer(
+                    "Fond",
+                    this.tileset
+                );
+
+                this.assets = this.salleGrandePorte.createLayer(
+                    "Assets",
+                    this.tileset
+                )
+
+                this.porte = this.salleGrandePorte.createLayer(
+                    "Porte",
+                    this.tileset
+                );
+
+                this.murs = this.salleGrandePorte.createLayer(
+                    "Colliders",
+                    this.tileset
+                );
+
+                this.porte.setScale(1.5);
+                this.fond.setScale(1.5);
+                this.assets.setScale(1.5);
+                this.murs.setScale(1.5);
+
+
+                //Collisions et Joueur
+                this.murs.setCollisionByProperty({ estSolide: true });
+
+                this.player = this.physics.add.sprite(75.3, 406.5, 'player').setScale(1.5).refreshBody();
+                this.player.body.setSize(20,27,true)
+                this.player.setOffset(8, 6);
+                this.player.setCollideWorldBounds(true);
+                this.physics.add.collider(this.player, this.murs);
+                //Phasmopedia
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+                //Barre de Vie
+                this.BarresdeVie = this.physics.add.staticGroup();
+                //Texte
+                this.texte3 = this.physics.add.staticGroup();
+                this.texte3 = this.physics.add.sprite(745.3, 250, 'texte3').setScale(0.3);
+                this.texte3.body.allowGravity = false;
+                //Item Carte Tarot
+                this.carteItem = this.physics.add.staticGroup();
+                this.carteVierge = this.carteItem.create(745.3,406.5, 'carteVierge');
+                this.projoCarte = this.physics.add.group({
+                    allowGravity: false,
+                });
+                
+                this.projoCarte2 = this.physics.add.group({
+                    allowGravity: false,
+                });
+                this.CarteLogo = this.physics.add.staticGroup();
+                this.CarteMob1 = this.physics.add.staticGroup();
+                this.FrameCartes = this.physics.add.staticGroup();
+                this.physics.add.collider(this.CarteMob1, this.murs);
+
+
+                this.physics.add.collider(this.projoCarte, this.murs, this.cleanProj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.murs, this.cleanProj2, null, this);
+
+                //Mob
+                this.mob1 = this.physics.add.group();
+                this.physics.add.collider(this.projoCarte, this.mob1, this.killMob1Proj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.mob1, this.killMob1Proj2, null, this);
+                this.physics.add.collider(this.mob1, this.murs);
+                this.physics.add.overlap(this.player, this.mob1, this.hitMob1, null, this);
+
+                this.physics.add.overlap(this.player,this.carteItem,this.recupCarteVierge,null,this);
+                this.physics.add.overlap(this.player,this.CarteMob1,this.recupCarteMob,null,this);
+
+                //Joueur
+                this.anims.create({
+                    key: 'idleRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'idleLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 15, end: 22 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 8, end: 14 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+
+                this.anims.create({
+                    key: 'floatCarte',
+                    frames: this.anims.generateFrameNumbers('carteVierge', { start: 0, end: 6 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+
+                //BarreDeVie
+                this.anims.create({
+                    key: 'BarreDeVie1',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 0, end: 0 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie2',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 1, end: 1 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie3',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 2, end: 2 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie4',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 3, end: 3 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie5',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 4, end: 4 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+
+                //ListeCartes
+                this.anims.create({
+                    key : 'Frame1',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 0, end : 0}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame2',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 1, end : 1}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame3',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 2, end : 2}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame4',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 3, end : 3}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                //Texte
+                this.anims.create({
+                    key: 'frameTexte3',
+                    frames : this.anims.generateFrameNumbers('texte3', { start : 0, end : 1}),
+                    frameRate : 5,
+                    repeat : -1,
+                })
+
+                //Camera
+                this.cameras.main.setBounds(0, 0, 1440, 624);
+                this.cameras.main.setSize(800, 600);
+                this.cameras.main.startFollow(this.player);
+
+                //Touches
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.keys = this.input.keyboard.addKeys({
+                    a: Phaser.Input.Keyboard.KeyCodes.A,
+                    p: Phaser.Input.Keyboard.KeyCodes.P,
+                    z: Phaser.Input.Keyboard.KeyCodes.Z,
+                    m: Phaser.Input.Keyboard.KeyCodes.M
+
+                });
+                this.physics.world.setBounds(0,0, 1440, 624)
+
+            }
+
+            recupCarteVierge(player, carteVierge) {
+                carteVierge.destroy();
+                this.recupC=true;
+                this.tir = true
+            }
+
+            cleanProj(proj, murs){
+                proj.destroy();
+            }
+
+            cleanProj2(proj2, murs){
+                proj2.destroy();
+            }
+
+            hitMob1(player, mob1){
+                if (this.invincible == false){
+                this.vieJoueur -= 1
+                this.invincible = true;
+                }
+            }
+
+            killMob1Proj(proj, mob1){
+                proj.destroy();
+                mob1.destroy();
+                this.mobDead = true;
+            }
+
+            killMob1Proj2(proj2, mob1){
+                proj2.destroy();
+                mob1.destroy();
+                this.mobDead = true;
+            }
+
+            recupCarteMob(player, carteMobTest){
+                carteMobTest.destroy();
+                this.CarteMob1Recup = true;
+            }
+
+            update() {
+
+                //Frame d'invulnerabilite
+                if (this.invincible == true){
+                    this.timerInvincible -= 1;
+                }
+                if (this.timerInvincible <= 0 ){
+                    this.invincible = false;
+                    this.timerInvincible = 100;
+                }
+
+                if (this.invincible == true){
+                    this.player.setTint(0xff0000);
+                }
+
+                if (this.invincible == false){
+                    this.player.setTint();
+                }
+
+                //Coordonnées
+                console.log(this.player.x, this.player.y)
+
+                //Déplacement
+                if (this.cursors.left.isDown) {
+                    this.player.direction = 'left';
+                    this.player.setVelocityX(-150);
+                    this.player.anims.play('walkLeft', true);
+                }
+                else if (this.cursors.right.isDown) {
+                    this.player.direction = 'right';
+                    this.player.setVelocityX(150);
+                    this.player.anims.play('walkRight', true);
+                }
+                else {
+                    if (this.player.direction == 'left'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleLeft', true);
+                    }
+                    if (this.player.direction == 'right'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleRight', true);
+                    }
+                }
+
+                //Ajout de la carte sur la porte
+                if (this.CarteMob1Recup == true){
+                    this.cartePorte0 = this.CarteMob1.create(728, 350, 'CarteMob1');
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame1', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                //Texte
+                this.texte3.anims.play('frameTexte3', true);
+
+                //Degats
+                if (this.recupC == true){
+
+                    if (this.vieJoueur == 5){
+                        this.BarredeVie1 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie1.anims.play('BarreDeVie1', true);
+                        this.BarredeVie1.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 4){
+                        this.BarredeVie2 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie2.anims.play('BarreDeVie2', true);
+                        this.BarredeVie2.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 3){
+                        this.BarredeVie3 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie3.anims.play('BarreDeVie3', true);
+                        this.BarredeVie3.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 2){
+                        this.BarredeVie4 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie4.anims.play('BarreDeVie4', true);
+                        this.BarredeVie4.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 1){
+                        this.BarredeVie5 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie5.anims.play('BarreDeVie5', true);
+                        this.BarredeVie5.setScrollFactor(0);
+                    }
+                }
+
+                if (Phaser.Input.Keyboard.JustDown(this.keys.z) && this.player.body.onFloor()) {
+                    this.player.setVelocityY(-240);
+                };
+
+                //Apparition de Carte
+                if (this.recupC == true){
+                    this.LogoC = this.CarteLogo.create(650, 40, 'logoCarte');
+                    this.LogoC.setScrollFactor(0);
+                }
+
+                //Apparition du Mob1
+                if (this.recupC == true && this.mobSpawn == true){
+                    this.mobSpawn = false;
+                    this.mobTest = this.mob1.create(1008.6, 406.5, 'Mob1');
+                    this.mobTest.setVelocityX(-100);
+                }
+
+                //Kill du mob et drop de carte 0
+                if (this.mobDead == true && this.dropMob == true){
+                    this.dropMob = false;
+                    this.carteMobTest = this.CarteMob1.create(this.mobTest.x, this.mobTest.y, 'CarteMob1');
+                }
+
+
+                //Apparition de Phasmo
+                if (this.recupL == true){
+                    this.LogoL = this.CarteLogo.create(600, 40, 'logoPhasmo');
+                    this.LogoL.setScrollFactor(0);
+                }
+                //Apparition du Phasmo
+                if (this.recupL==true && Phaser.Input.Keyboard.JustDown(this.keys.p) && this.phasmoActive==false && this.livrecree==false){
+                    this.phasmoActive = true;
+                    this.phasmopediaLivre = this.phasmopedia.create(400, 300, 'phasmopediaImage');
+                    this.phasmopediaLivre.setScrollFactor(0);
+                    this.phasmopediaLivre.setDepth(20);
+                    this.livrecree=true;
+                }
+                if (Phaser.Input.Keyboard.JustDown(this.keys.m) && this.phasmoActive == true){
+                    this.phasmopediaLivre.destroy();
+                    this.phasmoActive = false;
+                    this.livrecree=false;
+                }
+                //Anim de Carte
+                if(this.recupC==false){
+                    this.carteVierge.anims.play('floatCarte', true);
+                }
+
+                //Changement de scène
+                if (this.player.x >= 1405 && this.player.y >= 406) {
+                    this.scene.start('TestSalleN1', {vieJoueur : this.vieJoueur})
+                }
+
+                //Direction du Tir
+                if (this.cursors.right.isDown){
+                    this.player.direction == 'right';
+                }
+                if (this.cursors.left.isDown){
+                    this.player.direction == 'left';
+                }
+
+
+                //Tir
+                if (Phaser.Input.Keyboard.JustDown(this.keys.a) && this.tir == true){
+                    if (this.player.direction == 'left'){
+                        this.proj = this.projoCarte.create(this.player.x, this.player.y, 'projoCarte');
+                        this.proj.setVelocityX(-500);
+                        }
+                    if (this.player.direction == 'right'){
+                        this.proj2 = this.projoCarte2.create(this.player.x, this.player.y, 'projoCarte2');
+                        this.proj2.setVelocityX(500);
+                        }
+                    }
+
+                }
+
+            }
+
+        ////////////////////////////////////////SALLE 1////////////////////////////////////////
+        class TestSalleN1 extends Phaser.Scene {
+            constructor() {
+                super("TestSalleN1");
+                //Général
+                this.player;
+                this.cursors;
+                this.gameOver = false;
+                this.cameras;
+                this.vieJoueurMax = 5
+                this.BarresdeVie;
+                this.inventaire;
+                //Phasmopedia
+                this.phasmoItem;
+                this.phasmopedia;
+                this.phasmoLogo;
+                this.phasmoActive = false;
+                this.phasmopediaLivre;
+                this.recupL=true;
+                this.livrecree=false;
+                //Tir
+                this.tir = true;
+                this.proj;
+                this.proj2;
+                this.carteVierge;
+                this.recupC = true;
+                //Mob
+                this.mob1;
+                this.mobSpawn = true;
+                this.mobSpawn2 = true;
+                this.mobSpawn3 = true;
+                this.mobSpawn4 = true;
+                this.mob1Kill = false,
+                this.mobDead = false;
+                this.carteMobTest;
+                this.dropMob = true;
+                this.CarteMob1Recup = true;
+                //Frame invul
+                this.invincible = false,
+                this.timerInvincible = 100;
+                //Healthpack
+                this.healthpack;
+                this.recupHealth = true;
+
+            }
+
+            init(data){
+                this.vieJoueur = data.vieJoueur
+            }
+
+            preload() {
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.image('AssetsSalle1', 'assets/Niv1.png');
+                this.load.tilemapTiledJSON('salleNIV1', 'SalleNV1.json');
+                this.load.image('phasmopediaImage', 'assets/LivreOuvert.png');
+                this.load.image('logoPhasmo', 'assets/LogoPhasmo.png');
+                this.load.image('projoCarte', 'assets/ProjCarte.png');
+                this.load.image('projoCarte2', 'assets/ProjCarteGauche.png');
+                this.load.image('logoCarte', 'assets/LogoCarteVierge.png');
+                this.load.spritesheet('BarreDeVie', 'assets/BarreDeVie.png',
+                    { frameWidth : 134, frameHeight : 36});
+                this.load.image('Mob1', 'assets/EnfantMonstre.png');
+                this.load.image('Healthpack', 'assets/Pillule.png');
+                this.load.spritesheet('FrameCartes', 'assets/ItemFramecartes.png',
+                {frameWidth : 128, frameHeight : 32})
+            }
+
+            create() {
+
+                //Map Tiled
+                this.salleNIV1 = this.add.tilemap('salleNIV1');
+                this.tileset = this.salleNIV1.addTilesetImage(
+                    "Niv1",
+                    "AssetsSalle1",
+                );
+
+                this.fond = this.salleNIV1.createLayer(
+                    "Fond",
+                    this.tileset
+                );
+
+                this.assets = this.salleNIV1.createLayer(
+                    "Assets",
+                    this.tileset
+                );
+
+                this.colliders = this.salleNIV1.createLayer(
+                    "Colliders",
+                    this.tileset
+                );
+
+                this.colliders.setScale(1.5);
+                this.assets.setScale(1.5);
+                this.fond.setScale(1.5);
+
+                //Collisions et Joueur
+                this.colliders.setCollisionByProperty({ estSolide: true });
+
+                this.player = this.physics.add.sprite(35, 406.5, 'player').setScale(1.5).refreshBody();
+                this.player.body.setSize(20,27,true)
+                this.player.setOffset(8, 6);
+                this.player.setCollideWorldBounds(true);
+                this.physics.add.collider(this.player, this.colliders);
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+                this.CarteLogo = this.physics.add.staticGroup();
+                this.FrameCartes = this.physics.add.staticGroup();
+                //Barre de Vie
+                this.BarresdeVie = this.physics.add.staticGroup();
+                
+                this.healthpack = this.physics.add.group();
+                this.physics.add.collider(this.healthpack, this.colliders);
+                this.physics.add.overlap(this.player, this.healthpack, this.recupHealthpack, null, this);
+
+                //Tir
+                this.projoCarte = this.physics.add.group({
+                    allowGravity: false,
+                });
+                
+                this.projoCarte2 = this.physics.add.group({
+                    allowGravity: false,
+                });
+                this.physics.add.collider(this.projoCarte, this.colliders, this.cleanProj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.colliders, this.cleanProj2, null, this);
+
+                this.physics.add.overlap(this.player, this.mob1, this.hitMob1, null, this);
+
+                //Mob
+                this.mob1 = this.physics.add.group();
+                this.physics.add.collider(this.projoCarte, this.mob1, this.killMob1Proj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.mob1, this.killMob1Proj2, null, this);
+                this.physics.add.collider(this.mob1, this.colliders);
+                this.physics.add.overlap(this.player, this.mob1, this.hitMob1, null, this);
+
+                this.anims.create({
+                    key: 'idleRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'idleLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 15, end: 22 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 8, end: 14 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+
+                
+                //BarreDeVie
+                this.anims.create({
+                    key: 'BarreDeVie1',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 0, end: 0 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie2',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 1, end: 1 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie3',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 2, end: 2 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie4',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 3, end: 3 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie5',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 4, end: 4 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+
+                //ListeCartes
+                this.anims.create({
+                    key : 'Frame1',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 0, end : 0}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame2',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 1, end : 1}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame3',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 2, end : 2}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame4',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 3, end : 3}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                this.cameras.main.setBounds(0, 0, 1920, 1104);
+                this.cameras.main.setSize(800, 600);
+                this.cameras.main.startFollow(this.player);
+
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.keys = this.input.keyboard.addKeys({
+                    a: Phaser.Input.Keyboard.KeyCodes.A,
+                    p: Phaser.Input.Keyboard.KeyCodes.P,
+                    z: Phaser.Input.Keyboard.KeyCodes.Z,
+                    m: Phaser.Input.Keyboard.KeyCodes.M
+
+                });
+
+                this.physics.world.setBounds(0,0, 1920, 1104)
+
+            }
+
+            cleanProj(proj, colliders){
+                proj.destroy();
+            };
+
+            cleanProj2(proj2, colliders){
+                proj2.destroy();
+            };
+
+            hitMob1(player, mob1){
+                if (this.invincible == false){
+                this.vieJoueur -= 1
+                this.invincible = true;
+                }
+            };
+
+            killMob1Proj(proj, mob1){
+                proj.destroy();
+                mob1.destroy();
+                this.mobDead = true;
+            };
+
+            killMob1Proj2(proj2, mob1){
+                proj2.destroy();
+                mob1.destroy();
+                this.mobDead = true;
+            };
+
+            recupHealthpack(player, healthpack){
+                healthpack.destroy();
+                if (this.vieJoueur < this.vieJoueurMax){
+                    this.vieJoueur += 1
+                }
+            };
+
+            update() {
+
+                //Coordonnées
+                console.log(this.player.x, this.player.y)
+
+                //Frame d'invulnerabilite
+                if (this.invincible == true){
+                    this.timerInvincible -= 1;
+                }
+                if (this.timerInvincible <= 0 ){
+                    this.invincible = false;
+                    this.timerInvincible = 100;
+                }
+
+                if (this.invincible == true){
+                    this.player.setTint(0xff0000);
+                }
+
+                if (this.invincible == false){
+                    this.player.setTint();
+                }
+
+                //Deplacement
+                if (this.cursors.left.isDown) {
+                    this.player.direction = 'left';
+                    this.player.setVelocityX(-150);
+                    this.player.anims.play('walkLeft', true);
+                }
+                else if (this.cursors.right.isDown) {
+                    this.player.direction = 'right';
+                    this.player.setVelocityX(150);
+                    this.player.anims.play('walkRight', true);
+                }
+                else {
+                    if (this.player.direction == 'left'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleLeft', true);
+                    }
+                    if (this.player.direction == 'right'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleRight', true);
+                    }
+                }
+                
+                //Barre de vie
+                if (this.recupC == true){
+
+                    if (this.vieJoueur == 5){
+                        this.BarredeVie1 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie1.anims.play('BarreDeVie1', true);
+                        this.BarredeVie1.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 4){
+                        this.BarredeVie2 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie2.anims.play('BarreDeVie2', true);
+                        this.BarredeVie2.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 3){
+                        this.BarredeVie3 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie3.anims.play('BarreDeVie3', true);
+                        this.BarredeVie3.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 2){
+                        this.BarredeVie4 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie4.anims.play('BarreDeVie4', true);
+                        this.BarredeVie4.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 1){
+                        this.BarredeVie5 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie5.anims.play('BarreDeVie5', true);
+                        this.BarredeVie5.setScrollFactor(0);
+                    }
+                }
+                
+
+                //Déplacement
+                if (this.cursors.left.isDown) {
+                    this.player.setVelocityX(-200);
+                    this.player.anims.play('walkLeft', true);
+                }
+                else if (this.cursors.right.isDown) {
+                    this.player.setVelocityX(200);
+                    this.player.anims.play('walkRight', true);
+                }
+                else {
+                    if (this.player.direction == 'left'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleLeft', true);
+                    }
+                    if (this.player.direction == 'right'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleRight', true);
+                    }
+                }
+                if (Phaser.Input.Keyboard.JustDown(this.keys.z) && this.player.body.onFloor()) {
+                    this.player.setVelocityY(-240);
+                };
+
+                //Apparition du Phasmopedia
+                if (this.recupL == true){
+                    this.LogoP = this.phasmoLogo.create(600, 40, 'logoPhasmo');
+                    this.LogoP.setScrollFactor(0);
+                }
+
+                //Apparition de Carte
+                if (this.recupC == true){
+                    this.LogoC = this.CarteLogo.create(650, 40, 'logoCarte');
+                    this.LogoC.setScrollFactor(0);
+                }
+
+                //Apparition du Phasmo
+                if (this.recupL==true && Phaser.Input.Keyboard.JustDown(this.keys.p) && this.phasmoActive==false && this.livrecree==false){
+                    this.phasmoActive = true;
+                    this.phasmopediaLivre = this.phasmopedia.create(400, 300, 'phasmopediaImage');
+                    this.phasmopediaLivre.setScrollFactor(0);
+                    this.phasmopediaLivre.setDepth(20);
+                    this.livrecree=true;
+                }
+                if (Phaser.Input.Keyboard.JustDown(this.keys.m) && this.phasmoActive == true){
+                    this.phasmopediaLivre.destroy();
+                    this.phasmoActive = false;
+                    this.livrecree=false;
+                }
+
+                //Direction du tir
+                if (this.cursors.right.isDown){
+                    this.player.direction == 'right';
+                }
+                if (this.cursors.left.isDown){
+                    this.player.direction == 'left';
+                }
+
+                //Tir
+                if (Phaser.Input.Keyboard.JustDown(this.keys.a) && this.tir == true){
+                    if (this.player.direction == 'left'){
+                        this.proj = this.projoCarte.create(this.player.x, this.player.y, 'projoCarte');
+                        this.proj.setVelocityX(-500);
+                        }
+                    if (this.player.direction == 'right'){
+                        this.proj2 = this.projoCarte2.create(this.player.x, this.player.y, 'projoCarte2');
+                        this.proj2.setVelocityX(500);
+                        }
+                    }
+
+                //Apparition du Mob1
+                if (this.recupC == true && this.mobSpawn == true){
+                    this.mobSpawn = false;
+                    this.mobTest = this.mob1.create(408.3, 406.5, 'Mob1');
+                    this.mobTest.setVelocityX(-100);
+                    this.mobTest.setBounce(1);
+                }
+                //Apparition du Mob2
+                if (this.recupC == true && this.mobSpawn2 == true){
+                    this.mobSpawn2 = false;
+                    this.mobTest2 = this.mob1.create(805.3, 550.5, 'Mob1');
+                    this.mobTest2.setVelocityX(-100);
+                    this.mobTest2.setBounce(1);
+                }
+                //Apparition du Mob3
+                if (this.recupC == true && this.mobSpawn3 == true){
+                    this.mobSpawn3 = false;
+                    this.mobTest3 = this.mob1.create(1155.3, 694.5, 'Mob1');
+                    this.mobTest3.setVelocityX(-100);
+                    this.mobTest3.setBounce(1);
+                }
+                //Apparition du Mob4
+                if (this.recupC == true && this.mobSpawn4 == true){
+                    this.mobSpawn4 = false;
+                    this.mobTest4 = this.mob1.create(1482.6, 694.5, 'Mob1');
+                    this.mobTest4.setVelocityX(-100);
+                    this.mobTest4.setBounce(1);
+                }
+
+                //Healthpack
+                if (this.recupHealth == true){
+                    this.pillule = this.healthpack.create(1655, 600, 'Healthpack');
+                    this.recupHealth = false;
+                }
+
+                
+                //Changement de scène
+                if (this.player.x >= 1892 && this.player.y >= 694.5) {
+                    this.scene.start('Salle2', {vieJoueur : this.vieJoueur})
+                }
+
+                //ItemCarteFrame
+                if (this.CarteMob1Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame1', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+            }
+        }
+
+        class Salle2 extends Phaser.Scene {
+            constructor() {
+                super("Salle2");
+                //Général
+                this.player;
+                this.cursors;
+                this.gameOver = false;
+                this.cameras;
+                this.vieJoueurMax = 5
+                this.BarresdeVie;
+                this.inventaire;
+                //Phasmopedia
+                this.phasmoItem;
+                this.phasmopedia;
+                this.phasmoLogo;
+                this.phasmoActive = false;
+                this.phasmopediaLivre;
+                this.recupL=true;
+                this.livrecree=false;
+                //Tir
+                this.tir = true;
+                this.proj;
+                this.proj2;
+                this.carteVierge;
+                this.livrecree=false;
+                this.recupC = true;
+                //Mob
+                this.mob1;
+                this.mobSpawn = true;
+                this.mobSpawn2 = true;
+                this.mobSpawn3 = true;
+                this.mobSpawn4 = true;
+                this.mob1Kill = false,
+                this.mobDead = false;
+                this.carteMobTest;
+                this.dropMob = true;
+                this.CarteMob1Recup = true;
+                //Frame invul
+                this.invincible = false,
+                this.timerInvincible = 100;
+                //Healthpack
+                this.healthpack;
+                this.recupHealth = true;
+            }
+
+            init(data){
+                this.vieJoueur = data.vieJoueur
+            }
+
+            preload() {
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.image('logoPhasmo', 'assets/LogoPhasmo.png');
+                this.load.image('projoCarte', 'assets/ProjCarte.png');
+                this.load.image('phasmopediaImage', 'assets/LivreOuvert.png');
+                this.load.image('projoCarte2', 'assets/ProjCarteGauche.png');
+                this.load.image('logoCarte', 'assets/LogoCarteVierge.png');
+                this.load.spritesheet('BarreDeVie', 'assets/BarreDeVie.png',
+                    { frameWidth : 134, frameHeight : 36});
+                this.load.spritesheet('FrameCartes', 'assets/ItemFramecartes.png',
+                    {frameWidth : 128, frameHeight : 32})
+
+                this.load.image('assetsNiv2', 'assets/Niv2.png');
+                this.load.tilemapTiledJSON('salleNiveau2', 'SalleNV2.json');
+
+
+            }
+
+            create() {
+
+                //Map Tiled
+                this.salleNIV2 = this.add.tilemap('salleNiveau2');
+                this.tileset = this.salleNIV2.addTilesetImage(
+                    "Niv2",
+                    "assetsNiv2",
+                );
+
+                this.fond = this.salleNIV2.createLayer(
+                    "Fond",
+                    this.tileset
+                );
+
+                this.assets = this.salleNIV2.createLayer(
+                    "Assets",
+                    this.tileset
+                );
+
+                this.colliders = this.salleNIV2.createLayer(
+                    "Colliders",
+                    this.tileset
+                );
+
+                this.colliders.setScale(1.5);
+                this.assets.setScale(1.5);
+                this.fond.setScale(1.5);
+
+
+
+                //Collisions et Joueur
+                this.colliders.setCollisionByProperty({ estSolide: true });
+
+                this.player = this.physics.add.sprite(60, 502.5, 'player').setScale(1.5).refreshBody();
+                this.player.body.setSize(20,27,true)
+                this.player.setOffset(8, 6);
+                this.player.setCollideWorldBounds(true);
+                this.physics.add.collider(this.player, this.colliders);
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+                this.CarteLogo = this.physics.add.staticGroup();
+                this.FrameCartes = this.physics.add.staticGroup();
+
+                //Barre de vie
+                this.BarresdeVie = this.physics.add.staticGroup();
+
+                //Phasmopedia
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+
+                //Tir
+                this.projoCarte = this.physics.add.group({
+                    allowGravity: false,
+                });
+                
+                this.projoCarte2 = this.physics.add.group({
+                    allowGravity: false,
+                });
+                this.physics.add.collider(this.projoCarte, this.colliders, this.cleanProj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.colliders, this.cleanProj2, null, this);
+
+                //Anims Joueur
+                this.anims.create({
+                    key: 'idleRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'idleLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 15, end: 22 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 8, end: 14 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+
+                //BarreDeVie
+                this.anims.create({
+                    key: 'BarreDeVie1',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 0, end: 0 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie2',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 1, end: 1 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie3',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 2, end: 2 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie4',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 3, end: 3 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie5',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 4, end: 4 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+
+                //ListeCartes
+                this.anims.create({
+                    key : 'Frame1',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 0, end : 0}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame2',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 1, end : 1}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame3',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 2, end : 2}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame4',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 3, end : 3}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                //Camera
+                this.cameras.main.setBounds(0, 0, 1920, 864);
+                this.cameras.main.setSize(800, 600);
+                this.cameras.main.startFollow(this.player);
+
+                //Cursors
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.keys = this.input.keyboard.addKeys({
+                    a: Phaser.Input.Keyboard.KeyCodes.A,
+                    p: Phaser.Input.Keyboard.KeyCodes.P,
+                    z: Phaser.Input.Keyboard.KeyCodes.Z,
+                    m: Phaser.Input.Keyboard.KeyCodes.M
+
+                });
+
+                this.physics.world.setBounds(0,0, 1920, 864)
+            }
+
+            cleanProj(proj, colliders){
+                proj.destroy();
+            };
+
+            cleanProj2(proj2, colliders){
+                proj2.destroy();
+            };
+
+            update() {
+
+                //Coordonnées
+                console.log(this.player.x, this.player.y)
+
+                //Frame d'invulnerabilite
+                if (this.invincible == true){
+                    this.timerInvincible -= 1;
+                }
+                if (this.timerInvincible <= 0 ){
+                    this.invincible = false;
+                    this.timerInvincible = 100;
+                }
+
+                if (this.invincible == true){
+                    this.player.setTint(0xff0000);
+                }
+
+                if (this.invincible == false){
+                    this.player.setTint();
+                }
+
+                //Deplacement
+                if (this.cursors.left.isDown) {
+                    this.player.direction = 'left';
+                    this.player.setVelocityX(-150);
+                    this.player.anims.play('walkLeft', true);
+                }
+                else if (this.cursors.right.isDown) {
+                    this.player.direction = 'right';
+                    this.player.setVelocityX(150);
+                    this.player.anims.play('walkRight', true);
+                }
+                else {
+                    if (this.player.direction == 'left'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleLeft', true);
+                    }
+                    if (this.player.direction == 'right'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleRight', true);
+                    }
+                }
+
+                //Barre de vie
+                if (this.recupC == true){
+
+                    if (this.vieJoueur == 5){
+                        this.BarredeVie1 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie1.anims.play('BarreDeVie1', true);
+                        this.BarredeVie1.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 4){
+                        this.BarredeVie2 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie2.anims.play('BarreDeVie2', true);
+                        this.BarredeVie2.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 3){
+                        this.BarredeVie3 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie3.anims.play('BarreDeVie3', true);
+                        this.BarredeVie3.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 2){
+                        this.BarredeVie4 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie4.anims.play('BarreDeVie4', true);
+                        this.BarredeVie4.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 1){
+                        this.BarredeVie5 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie5.anims.play('BarreDeVie5', true);
+                        this.BarredeVie5.setScrollFactor(0);
+                    }
+                }
+
+                //Déplacement
+                if (this.cursors.left.isDown) {
+                    this.player.setVelocityX(-200);
+                    this.player.anims.play('walkLeft', true);
+                }
+                else if (this.cursors.right.isDown) {
+                    this.player.setVelocityX(200);
+                    this.player.anims.play('walkRight', true);
+                }
+                else {
+                    if (this.player.direction == 'left'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleLeft', true);
+                    }
+                    if (this.player.direction == 'right'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleRight', true);
+                    }
+                }
+                if (Phaser.Input.Keyboard.JustDown(this.keys.z) && this.player.body.onFloor()) {
+                    this.player.setVelocityY(-240);
+                };
+
+                //Apparition du Phasmopedia
+                if (this.recupL == true){
+                    this.LogoP = this.phasmoLogo.create(600, 40, 'logoPhasmo');
+                    this.LogoP.setScrollFactor(0);
+                }
+
+                //Apparition de Carte
+                if (this.recupC == true){
+                    this.LogoC = this.CarteLogo.create(650, 40, 'logoCarte');
+                    this.LogoC.setScrollFactor(0);
+                }
+
+                //Apparition du Phasmo
+                if (this.recupL==true && Phaser.Input.Keyboard.JustDown(this.keys.p) && this.phasmoActive==false && this.livrecree==false){
+                    this.phasmoActive = true;
+                    this.phasmopediaLivre = this.phasmopedia.create(400, 300, 'phasmopediaImage');
+                    this.phasmopediaLivre.setScrollFactor(0);
+                    this.phasmopediaLivre.setDepth(20);
+                    this.livrecree=true;
+                }
+                if (Phaser.Input.Keyboard.JustDown(this.keys.m) && this.phasmoActive == true){
+                    this.phasmopediaLivre.destroy();
+                    this.phasmoActive = false;
+                    this.livrecree=false;
+                }
+
+                //Direction du tir
+                if (this.cursors.right.isDown){
+                    this.player.direction == 'right';
+                }
+                if (this.cursors.left.isDown){
+                    this.player.direction == 'left';
+                }
+
+                //Tir
+                if (Phaser.Input.Keyboard.JustDown(this.keys.a) && this.tir == true){
+                    if (this.player.direction == 'left'){
+                        this.proj = this.projoCarte.create(this.player.x, this.player.y, 'projoCarte');
+                        this.proj.setVelocityX(-500);
+                        }
+                    if (this.player.direction == 'right'){
+                        this.proj2 = this.projoCarte2.create(this.player.x, this.player.y, 'projoCarte2');
+                        this.proj2.setVelocityX(500);
+                        }
+                }
+                //(this.player.x >= 1641 && this.player.x <= 1720) && (this.player.y >=1298 && this.player.y <= 1357)
+
+                /*if ((this.player.x >= 444 && this.player.x <= 654) && (this.player.y >=874.5 && this.player.y <= 800)){
+                    this.vieJoueur -= 1;
+                    this.player.x = 60;
+                    this.player.y = 502.5;
+                }
+                */
+
+                //Changement de scène
+                if (this.player.x >= 1895 && this.player.y >= 262.5) {
+                    this.scene.start('Salle3', {vieJoueur : this.vieJoueur})
+                }
+
+                //ItemCarteFrame
+                if (this.CarteMob1Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame1', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+            }
+
+                
+        }
+
+        class Salle3 extends Phaser.Scene {
+            constructor() {
+                super("Salle3");
+                //Général
+                this.player;
+                this.cursors;
+                this.gameOver = false;
+                this.cameras;
+                this.vieJoueurMax = 5
+                this.BarresdeVie;
+                this.barresPhoto;
+                this.inventaire;
+                //Phasmopedia
+                this.phasmoItem;
+                this.phasmopedia;
+                this.phasmoLogo;
+                this.phasmoActive = false;
+                this.phasmopediaLivre;
+                this.recupL=true;
+                this.livrecree=false;
+                //Tir
+                this.tir = true;
+                this.proj;
+                this.proj2;
+                this.carteVierge;
+                this.recupC = true;
+                //Mob
+                this.mobChevalier;
+                this.carteMobChevalier;
+                this.dropMobChevalier = true;
+                this.CarteMob2Recup = false;
+                this.CarteMob1Recup = true;
+                this.TeteChev;
+                this.chevalierSpawn = true;
+                this.timerStun = 70;
+                this.poursuite = true;
+                this.chevalierDead = false;
+                //Frame invul
+                this.invincible = false,
+                this.timerInvincible = 100;
+                //Healthpack
+                this.healthpack;
+                this.recupHealth = true;
+                //Appareil photo
+                this.timerFlash = 5
+                this.timerRecupFlash = 100;
+                this.flash;
+                this.recupAppareil = false;
+                this.jaugeFlash = 3;
+                this.lifeFlash = false;
+                this.AppareilLogo;
+
+                //Block
+                this.block;
+
+            }
+
+            init(data){
+                this.vieJoueur = data.vieJoueur
+            }
+
+            preload() {
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.image('logoPhasmo', 'assets/LogoPhasmo.png');
+                this.load.image('projoCarte', 'assets/ProjCarte.png');
+                this.load.image('projoCarte2', 'assets/ProjCarteGauche.png');
+                this.load.image('phasmopediaImage', 'assets/LivreOuvert.png');
+                this.load.image('logoCarte', 'assets/LogoCarteVierge.png');
+                this.load.spritesheet('BarreDeVie', 'assets/BarreDeVie.png',
+                    { frameWidth : 134, frameHeight : 36});
+                this.load.spritesheet('FrameCartes', 'assets/ItemFramecartes.png',
+                    {frameWidth : 128, frameHeight : 32})
+                this.load.image('TeteChevalier', 'assets/TeteChevalier.png');
+                this.load.image('carteChevalier', 'assets/CarteChevalier.png');
+                this.load.spritesheet('chevalier', 'assets/Chevalier.png',
+                    {frameWidth : 32, frameHeight : 40})
+                this.load.image('hitboxChevalier', 'assets/hitBoxInvisible.png');
+                this.load.image('Photo', 'assets/AppareilPhoto.png');
+                this.load.image('Flash', 'assets/Flash.png') 
+                this.load.spritesheet('BarrePhoto', 'assets/BarrePhoto.png',
+                    {frameWidth: 82, frameHeight : 27})
+
+                this.load.image('logoAppareil', 'assets/LogoAppareil.png');
+
+                this.load.image('block', 'assets/Blocage.png');
+
+                this.load.image('assetsNiv3', 'assets/Niv3.png');
+                this.load.tilemapTiledJSON('salleNiveau3', 'SAlleNV3.json');
+            }
+
+            create() {
+
+                //Map Tiled
+                this.salleNIV3 = this.add.tilemap('salleNiveau3');
+                this.tileset = this.salleNIV3.addTilesetImage(
+                    "Niv3",
+                    "assetsNiv3",
+                );
+
+                this.fond = this.salleNIV3.createLayer(
+                    "Fond",
+                    this.tileset
+                );
+
+                this.assets = this.salleNIV3.createLayer(
+                    "Assets",
+                    this.tileset
+                );
+
+                this.colliders = this.salleNIV3.createLayer(
+                    "Colliders",
+                    this.tileset
+                );
+
+                this.colliders2 = this.salleNIV3.createLayer(
+                    "Colliders2",
+                    this.tileset
+                );
+
+                
+                this.colliders.setScale(1.5);
+                this.colliders2.setScale(1.5);
+                this.assets.setScale(1.5);
+                this.fond.setScale(1.5);
+                
+
+                //Collisions et Joueur
+                this.colliders.setCollisionByProperty({ estSolide: true });
+                this.colliders2.setCollisionByProperty({ estSolide: true });
+
+                
+                this.photoG = this.physics.add.group();
+                this.photoItem = this.photoG.create(713.3, 465, 'Photo');
+
+                this.TeteChev = this.physics.add.staticGroup();
+
+                this.player = this.physics.add.sprite(70, 454.5, 'player').setScale(1.5).refreshBody();
+                this.player.body.setSize(20,27,true)
+                this.player.setOffset(8, 6);
+                this.player.setCollideWorldBounds(true);
+                this.physics.add.collider(this.player, this.colliders);
+                this.physics.add.collider(this.player, this.colliders2);
+                this.physics.add.collider(this.photoG, this.colliders);
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+                this.CarteLogo = this.physics.add.staticGroup();
+                this.FrameCartes = this.physics.add.staticGroup();
+
+                //Bloc
+                this.block = this.physics.add.staticGroup();
+                this.blocage = this.block.create(1400, 447, 'block');
+                this.physics.add.collider(this.player, this.blocage);
+
+
+
+                //Chevalier
+                this.casque = this.TeteChev.create(463.9, 450, 'TeteChevalier').setScale(2);
+                this.carteMobChevalier = this.physics.add.group();
+                this.physics.add.collider(this.carteMobChevalier, this.colliders);
+                this.physics.add.collider(this.carteMobChevalier, this.colliders2);
+
+                this.physics.add.overlap(this.player, this.carteMobChevalier, this.recupCarteMobChevalier, null, this)
+
+                //Barre de vie
+                this.BarresdeVie = this.physics.add.staticGroup();
+
+                //Barre photo
+                this.barresPhoto = this.physics.add.staticGroup();
+
+                //Phasmopedia
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+
+                //Tir
+                this.projoCarte = this.physics.add.group({
+                    allowGravity: false,
+                });
+                
+                this.projoCarte2 = this.physics.add.group({
+                    allowGravity: false,
+                });
+                this.physics.add.collider(this.projoCarte, this.colliders2, this.cleanProj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.colliders2, this.cleanProj2, null, this);
+
+                //Flash
+                this.flash = this.physics.add.staticGroup();
+
+                this.physics.add.overlap(this.player, this.photoG, this.recupPhoto, null, this);
+
+                this.mobChevalier = this.physics.add.group();
+                this.physics.add.collider(this.mobChevalier, this.colliders);
+                this.physics.add.collider(this.mobChevalier, this.blocage);
+                this.physics.add.overlap(this.projoCarte, this.mobChevalier, this.killKnight1, null, this);
+                this.physics.add.overlap(this.projoCarte2, this.mobChevalier, this.killKnight2, null, this);
+
+                this.hitbox = this.physics.add.sprite(0, 0, 'hitboxChevalier');
+                this.hitbox.body.allowGravity = false;
+                this.physics.add.overlap(this.player, this.hitbox, this.triggerFollow, null, this);
+                this.physics.add.overlap(this.player, this.mobChevalier, this.hitMob1, null, this);
+                this.physics.add.overlap(this.flash, this.mobChevalier, this.stun, null, this);
+
+                this.AppareilLogo = this.physics.add.staticGroup();
+
+
+
+                //Anims Perso
+                this.anims.create({
+                    key: 'idleRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'idleLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 15, end: 22 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 8, end: 14 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+
+                //BarreDeVie
+                this.anims.create({
+                    key: 'BarreDeVie1',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 0, end: 0 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie2',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 1, end: 1 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie3',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 2, end: 2 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie4',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 3, end: 3 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie5',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 4, end: 4 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+
+                //ListeCartes
+                this.anims.create({
+                    key : 'Frame1',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 0, end : 0}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame2',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 1, end : 1}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame3',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 2, end : 2}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame4',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 3, end : 3}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                //Chevalier
+                this.anims.create({
+                    key : 'knightwalkRight',
+                    frames : this.anims.generateFrameNumbers('chevalier', {start : 0, end :8}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                this.anims.create({
+                    key : 'knightwalkLeft',
+                    frames : this.anims.generateFrameNumbers('chevalier', {start : 9, end :17}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                this.anims.create({
+                    key : 'knightIddle',
+                    frames : this.anims.generateFrameNumbers('chevalier', {start : 18, end :21}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                //Barre 
+                this.anims.create({
+                    key : 'PhotoFrame1',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 0, end : 0}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'PhotoFrame2',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 1, end : 1}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'PhotoFrame3',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 2, end : 2}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'PhotoFrame4',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 3, end : 3}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                
+                //Camera
+                this.cameras.main.setBounds(0, 0, 1440, 624);
+                this.cameras.main.setSize(800, 600);
+                this.cameras.main.startFollow(this.player);
+
+                this.physics.world.setBounds(0,0, 1440, 624)
+
+                //Cursors
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.keys = this.input.keyboard.addKeys({
+                    a: Phaser.Input.Keyboard.KeyCodes.A,
+                    p: Phaser.Input.Keyboard.KeyCodes.P,
+                    z: Phaser.Input.Keyboard.KeyCodes.Z,
+                    m: Phaser.Input.Keyboard.KeyCodes.M,
+                    e: Phaser.Input.Keyboard.KeyCodes.E
+
+                });
+            }
+
+            cleanProj(proj, colliders){
+                proj.destroy();
+            };
+
+            cleanProj2(proj2, colliders){
+                proj2.destroy();
+            };
+
+            recupPhoto(player, photoItem){
+                photoItem.destroy();
+                this.casque.destroy();
+                this.recupAppareil = true;
+            };
+
+            triggerFollow(player, hitbox){
+                if (this.poursuite == true){
+                    if (this.player.x <= this.chevalier.x){
+                        this.chevalier.setVelocityX(-50);
+                        this.chevalier.anims.play('knightwalkLeft', true)
+                    }
+                    else if (this.player.x >= this.chevalier.x){
+                        this.chevalier.setVelocityX(50);
+                        this.chevalier.anims.play('knightwalkRight', true)
+                    }
+                }
+            }
+
+            killKnight1(proj, chevalier){
+                if (this.poursuite == true){
+                    proj.destroy();
+                }
+                else if (this.poursuite == false){
+                    proj.destroy();
+                    this.chevalier.destroy();
+                    this.chevalierDead = true;
+                    this.hitbox.destroy();
+                    this.blocage.destroy();
+                }
+            }
+
+            killKnight2(proj2, chevalier){
+                if (this.poursuite == true){
+                    proj2.destroy();
+                }
+                else if (this.poursuite == false){
+                    proj2.destroy();
+                    this.chevalier.destroy();
+                    this.chevalierDead = true;
+                    this.hitbox.destroy();
+                    this.blocage.destroy();
+                }
+
+            }
+
+            hitMob1(player, chevalier){
+                if (this.invincible == false && this.poursuite == true){
+                this.vieJoueur -= 1
+                this.invincible = true;
+                }
+            };
+
+            stun(flash, chevalier){
+                this.poursuite = false;
+            }
+
+            recupCarteMobChevalier(player, carteMobChevalier){
+                carteMobChevalier.destroy();
+                this.CarteMob2Recup = true;
+            }
+
+            update() {
+
+                //Coordonnées
+                console.log(this.player.x, this.player.y)
+
+                //Frame d'invulnerabilite
+                if (this.invincible == true){
+                    this.timerInvincible -= 1;
+                }
+                if (this.timerInvincible <= 0 ){
+                    this.invincible = false;
+                    this.timerInvincible = 100;
+                }
+
+                if (this.invincible == true){
+                    this.player.setTint(0xff0000);
+                }
+
+                if (this.invincible == false){
+                    this.player.setTint();
+                }
+
+                //Deplacement
+                if (this.cursors.left.isDown) {
+                    this.player.direction = 'left';
+                    this.player.setVelocityX(-150);
+                    this.player.anims.play('walkLeft', true);
+                }
+                else if (this.cursors.right.isDown) {
+                    this.player.direction = 'right';
+                    this.player.setVelocityX(150);
+                    this.player.anims.play('walkRight', true);
+                }
+                else {
+                    if (this.player.direction == 'left'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleLeft', true);
+                    }
+                    if (this.player.direction == 'right'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleRight', true);
+                    }
+                }
+
+                //Barre de vie
+                if (this.recupC == true){
+
+                    if (this.vieJoueur == 5){
+                        this.BarredeVie1 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie1.anims.play('BarreDeVie1', true);
+                        this.BarredeVie1.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 4){
+                        this.BarredeVie2 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie2.anims.play('BarreDeVie2', true);
+                        this.BarredeVie2.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 3){
+                        this.BarredeVie3 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie3.anims.play('BarreDeVie3', true);
+                        this.BarredeVie3.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 2){
+                        this.BarredeVie4 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie4.anims.play('BarreDeVie4', true);
+                        this.BarredeVie4.setScrollFactor(0);
+                    }
+                    if (this.vieJoueur == 1){
+                        this.BarredeVie5 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                        this.BarredeVie5.anims.play('BarreDeVie5', true);
+                        this.BarredeVie5.setScrollFactor(0);
+                    }
+                }
+
+
+                //Déplacement
+                if (this.cursors.left.isDown) {
+                    this.player.setVelocityX(-200);
+                    this.player.anims.play('walkLeft', true);
+                }
+                else if (this.cursors.right.isDown) {
+                    this.player.setVelocityX(200);
+                    this.player.anims.play('walkRight', true);
+                }
+                else {
+                    if (this.player.direction == 'left'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleLeft', true);
+                    }
+                    if (this.player.direction == 'right'){
+                        this.player.setVelocityX(0);
+                        this.player.anims.play('idleRight', true);
+                    }
+                }
+                if (Phaser.Input.Keyboard.JustDown(this.keys.z) && this.player.body.onFloor()) {
+                    this.player.setVelocityY(-240);
+                };
+
+                //Apparition du Phasmopedia
+                if (this.recupL == true){
+                    this.LogoP = this.phasmoLogo.create(600, 40, 'logoPhasmo');
+                    this.LogoP.setScrollFactor(0);
+                }
+
+                //Apparition de Carte
+                if (this.recupC == true){
+                    this.LogoC = this.CarteLogo.create(650, 40, 'logoCarte');
+                    this.LogoC.setScrollFactor(0);
+                }
+
+                //Apparition de l'appareil
+                if (this.recupAppareil == true){
+                    this.LogoA = this.AppareilLogo.create(700, 40, 'logoAppareil');
+                    this.LogoA.setScrollFactor(0);
+                }
+
+                //Apparition du Phasmo
+                if (this.recupL==true && Phaser.Input.Keyboard.JustDown(this.keys.p) && this.phasmoActive==false && this.livrecree==false){
+                    this.phasmoActive = true;
+                    this.phasmopediaLivre = this.phasmopedia.create(400, 300, 'phasmopediaImage');
+                    this.phasmopediaLivre.setScrollFactor(0);
+                    this.phasmopediaLivre.setDepth(20);
+                    this.livrecree=true;
+                }
+                if (Phaser.Input.Keyboard.JustDown(this.keys.m) && this.phasmoActive == true){
+                    this.phasmopediaLivre.destroy();
+                    this.phasmoActive = false;
+                    this.livrecree=false;
+                }
+
+                //Direction du tir
+                if (this.cursors.right.isDown){
+                    this.player.direction == 'right';
+                }
+                if (this.cursors.left.isDown){
+                    this.player.direction == 'left';
+                }
+
+                //Tir
+                if (Phaser.Input.Keyboard.JustDown(this.keys.a) && this.tir == true){
+                    if (this.player.direction == 'left'){
+                        this.proj = this.projoCarte.create(this.player.x, this.player.y, 'projoCarte');
+                        this.proj.setVelocityX(-500);
+                        this.proj.body.setSize(22 ,10,true)
+                        this.proj.setOffset(8, 10);
+                        }
+                    if (this.player.direction == 'right'){
+                        this.proj2 = this.projoCarte2.create(this.player.x, this.player.y, 'projoCarte2');
+                        this.proj2.setVelocityX(500);
+                        this.proj2.body.setSize(22 ,10,true)
+                        this.proj2.setOffset(8, 10);
+                        }
+                }
+
+                //ItemCarteFrame
+                if (this.CarteMob1Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame1', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                if (this.CarteMob2Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame2', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                if (this.CarteMob3Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame3', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                if (this.CarteMob4Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame4', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                //Apparition du Mob1
+                if (this.recupAppareil == true && this.chevalierSpawn == true){
+                    this.chevalierSpawn = false;
+                    this.chevalier = this.mobChevalier.create(463.9, 450, 'chevalier').setScale(2);
+                    this.chevalier.body.setSize(15 ,35,true)
+                    this.chevalier.setOffset(8, 6);
+                }
+
+                //Drop de carte
+                if (this.chevalierDead == true && this.dropMobChevalier == true){
+                    this.dropMobChevalier = false;
+                    this.carteChevalier = this.carteMobChevalier.create(this.chevalier.x, this.chevalier.y, 'carteChevalier');
+                }
+
+                //Ajout de la carte dans la frame
+                if (this.CarteMob2Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame2', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+
+                //TriggerBox
+                if (this.recupAppareil == true){                              
+                    this.hitbox.x = this.chevalier.x;
+                    this.hitbox.y = this.chevalier.y;
+                }
+                //AppareilPhoto
+                if (this.recupAppareil == true){
+                    if (this.jaugeFlash == 3){
+                        this.barresPhoto1 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                        this.barresPhoto1.anims.play('PhotoFrame1', true);
+                        this.barresPhoto1.setScrollFactor(0);
+                    }
+                    if (this.jaugeFlash == 2){
+                        this.barresPhoto2 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                        this.barresPhoto2.anims.play('PhotoFrame2', true)
+                        this.barresPhoto2.setScrollFactor(0);
+                    }
+                    if (this.jaugeFlash == 1){
+                        this.barresPhoto3 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                        this.barresPhoto3.anims.play('PhotoFrame3', true)
+                        this.barresPhoto3.setScrollFactor(0);
+                    }
+                    if (this.jaugeFlash == 0){
+                        this.barresPhoto4 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                        this.barresPhoto4.anims.play('PhotoFrame4', true)
+                        this.barresPhoto4.setScrollFactor(0);
+                    }
+                };
+
+                //Flash
+                if (Phaser.Input.Keyboard.JustDown(this.keys.e) && this.recupAppareil == true && this.lifeFlash == false && this.jaugeFlash >= 1){
+                    this.flashImage = this.flash.create(this.player.x, this.player.y, 'Flash').setScale(1.1);
+                    this.lifeFlash = true;
+                    this.jaugeFlash -=1;
+                }
+
+                if (this.lifeFlash == true){
+                    this.timerFlash -= 1;
+                }
+
+                if (this.timerFlash <= 0){
+                    this.flashImage.destroy();
+                    this.lifeFlash = false;
+                    this.timerFlash = 5;
+                }
+                if (this.jaugeFlash < 3){
+                    this.timerRecupFlash -=1
+                }
+
+                if (this.timerRecupFlash <= 0){
+                    this.jaugeFlash += 1;
+                    this.timerRecupFlash = 100;
+                }
+
+                if (this.poursuite == false){
+                    this.timerStun -=1
+                    if (this.chevalierDead == false){
+                        this.chevalier.setVelocity(0);
+                        this.chevalier.anims.play('knightIddle', true)
+                    }
+                }
+
+                if (this.timerStun <= 0){
+                    this.poursuite = true;
+                    this.timerStun = 70
+                }
+
+                //Changement de scène
+                if (this.player.x >= 1415.5 && this.player.y >= 454.5) {
+                    this.scene.start('Salle4', {vieJoueur : this.vieJoueur})
+                }
+        }
+    }
+
+    class Salle4 extends Phaser.Scene {
+            constructor() {
+                super("Salle4");
+                //Général
+                this.player;
+                this.cursors;
+                this.gameOver = false;
+                this.cameras;
+                this.vieJoueurMax = 5
+                this.BarresdeVie;
+                this.barresPhoto;
+                this.inventaire;
+                //Phasmopedia
+                this.phasmoItem;
+                this.phasmopedia;
+                this.phasmoLogo;
+                this.phasmoActive = false;
+                this.phasmopediaLivre;
+                this.recupL=true;
+                this.livrecree=false;
+                //Tir
+                this.tir = true;
+                this.proj;
+                this.proj2;
+                this.carteVierge;
+                this.recupC = true;
+                //Mob
+                this.mobChevalier;
+                this.mobEnfant;
+                this.carteMobChevalier;
+                this.dropMobChevalier = true;
+                this.CarteMob2Recup = true;
+                this.CarteMob1Recup = true;
+                this.TeteChev;
+                this.chevalierSpawn1 = true;
+                this.timerStun = 70;
+                this.poursuite = true;
+                this.chevalierDead = false;
+                this.mobSpawn = true;
+                this.mobSpawn2 = true;
+                this.mobSpawn3 = true;
+                this.mobSpawn4 = true;
+                this.mobSpawn5 = true;
+                this.mobSpawn6 = true;
+                this.mobSpawn7 = true;
+                this.mobSpawn8 = true;
+                this.mobSpawn9 = true;
+                this.mobSpawn10 = true;
+                this.mobSpawn11 = true;
+                this.mobSpawn12 = true;
+                this.mobSpawn13 = true;
+
+                //Frame invul
+                this.invincible = false,
+                this.timerInvincible = 100;
+                //Healthpack
+                this.healthpack;
+                this.recupHealth = true;
+                //Appareil photo
+                this.timerFlash = 5
+                this.timerRecupFlash = 100;
+                this.flash;
+                this.recupAppareil = true;
+                this.jaugeFlash = 3;
+                this.lifeFlash = false;
+                this.AppareilLogo;
+                //Healthpack
+                this.healthpack;
+                this.recupHealth1 = true;
+                this.recupHealth2 = true;
+                this.recupHealth3 = true;
+            }
+
+            init(data){
+                this.vieJoueur = data.vieJoueur
+            }
+
+            preload() {
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.image('logoPhasmo', 'assets/LogoPhasmo.png');
+                this.load.image('projoCarte', 'assets/ProjCarte.png');
+                this.load.image('projoCarte2', 'assets/ProjCarteGauche.png');
+                this.load.image('logoCarte', 'assets/LogoCarteVierge.png');
+                this.load.image('phasmopediaImage', 'assets/LivreOuvert.png');
+                this.load.spritesheet('BarreDeVie', 'assets/BarreDeVie.png',
+                    { frameWidth : 134, frameHeight : 36});
+                this.load.spritesheet('FrameCartes', 'assets/ItemFramecartes.png',
+                    {frameWidth : 128, frameHeight : 32})
+                this.load.image('TeteChevalier', 'assets/TeteChevalier.png');
+                this.load.image('carteChevalier', 'assets/CarteChevalier.png');
+                this.load.spritesheet('chevalier', 'assets/Chevalier.png',
+                    {frameWidth : 32, frameHeight : 40})
+                this.load.image('Mob1', 'assets/EnfantMonstre.png');
+                this.load.image('hitboxChevalier', 'assets/hitBoxInvisible2.png');
+                this.load.image('Photo', 'assets/AppareilPhoto.png');
+                this.load.image('Flash', 'assets/Flash.png') 
+                this.load.spritesheet('BarrePhoto', 'assets/BarrePhoto.png',
+                    {frameWidth: 82, frameHeight : 27})
+
+                this.load.image('logoAppareil', 'assets/LogoAppareil.png');
+                this.load.image('Healthpack', 'assets/Pillule.png');
+
+                this.load.image('assetsNiv4', 'assets/Niv4.png');
+                this.load.tilemapTiledJSON('salleNiveau4', 'SalleNV4.json');
+                
+            }
+
+            create() {
+
+                //Map Tiled
+                this.salleNIV4 = this.add.tilemap('salleNiveau4');
+                this.tileset = this.salleNIV4.addTilesetImage(
+                    "Niv4",
+                    "assetsNiv4",
+                );
+
+                this.fond = this.salleNIV4.createLayer(
+                    "Fond1",
+                    this.tileset
+                );
+                this.fond3 = this.salleNIV4.createLayer(
+                    "Fond3",
+                    this.tileset
+                );
+                this.fond2 = this.salleNIV4.createLayer(
+                    "Fond2",
+                    this.tileset
+                );
+
+                this.assets = this.salleNIV4.createLayer(
+                    "Assets",
+                    this.tileset
+                );
+
+                this.colliders = this.salleNIV4.createLayer(
+                    "Colliders",
+                    this.tileset
+                );
+
+                this.colliders2 = this.salleNIV4.createLayer(
+                    "Colliders2",
+                    this.tileset
+                );
+
+                this.collidersMob = this.salleNIV4.createLayer(
+                    "CollidersMob",
+                    this.tileset
+                );
+
+                this.colliders.setScale(1.5);
+                this.colliders2.setScale(1.5);
+                this.collidersMob.setScale(1.5);
+                this.assets.setScale(1.5);
+                this.fond2.setScale(1.5);
+                this.fond3.setScale(1.5);
+                this.fond.setScale(1.5);
+
+                //Collisions
+                this.colliders.setCollisionByProperty({estSolide : true});
+                this.colliders2.setCollisionByProperty({estSolide : true});
+                this.assets.setCollisionByProperty({estVide : true});
+                this.collidersMob.setCollisionByProperty({estSolideMob : true});
+
+                //Joueur
+                this.player = this.physics.add.sprite(60, 886.5, 'player').setScale(1.5).refreshBody();
+                this.player.body.setSize(20,27,true)
+                this.player.setOffset(8, 6);
+                this.player.setCollideWorldBounds(true);
+                this.physics.add.collider(this.player, this.colliders);
+                this.physics.add.collider(this.player, this.colliders2);
+                this.physics.add.collider(this.player, this.assets);
+
+                //Soin
+                this.healthpack = this.physics.add.group();
+                this.physics.add.collider(this.healthpack, this.colliders);
+                this.physics.add.overlap(this.player, this.healthpack, this.recupHealthpack, null, this);
+
+                //Cursors et Logo
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+                this.CarteLogo = this.physics.add.staticGroup();
+                this.FrameCartes = this.physics.add.staticGroup();
+
+                //Barre de vie et barre photo
+                this.BarresdeVie = this.physics.add.staticGroup();
+                this.barresPhoto = this.physics.add.staticGroup();
+                this.AppareilLogo = this.physics.add.staticGroup();
+
+                //Phasmopedia
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+
+                //Tir et Flash
+                this.projoCarte = this.physics.add.group({
+                    allowGravity: false,
+                });
+                
+                this.projoCarte2 = this.physics.add.group({
+                    allowGravity: false,
+                });
+                this.physics.add.collider(this.projoCarte, this.colliders, this.cleanProj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.colliders, this.cleanProj2, null, this);
+                this.physics.add.collider(this.projoCarte, this.colliders2, this.cleanProj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.colliders2, this.cleanProj2, null, this);
+
+                this.flash = this.physics.add.staticGroup();
+
+                //Mobs
+                this.mobChevalier = this.physics.add.group();
+                this.physics.add.collider(this.mobChevalier, this.collidersMob);
+                this.physics.add.collider(this.mobChevalier, this.colliders);
+                this.physics.add.collider(this.projoCarte, this.mobChevalier, this.killKnight1, null, this);
+                this.physics.add.collider(this.projoCarte2, this.mobChevalier, this.killKnight2, null, this);
+                this.hitbox = this.physics.add.sprite(0, 0, 'hitboxChevalier');
+                this.hitbox.body.allowGravity = false;
+
+                this.physics.add.overlap(this.player, this.mobChevalier, this.hitMobChevalier, null, this);
+                this.physics.add.overlap(this.flash, this.mobChevalier, this.stunChevalier, null, this);
+                this.physics.add.overlap(this.player, this.hitbox, this.triggerFollow, null, this);
+
+                this.mobEnfant = this.physics.add.group();
+                this.physics.add.collider(this.mobEnfant, this.colliders);
+                this.physics.add.collider(this.mobEnfant, this.collidersMob);
+                this.physics.add.collider(this.projoCarte, this.mobEnfant, this.killMob1Proj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.mobEnfant, this.killMob1Proj2, null, this);
+                this.physics.add.overlap(this.player, this.mobEnfant, this.hitMobEnfant, null, this);
+
+                //Anims de Perso
+                this.anims.create({
+                    key: 'idleRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'idleLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 15, end: 22 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 8, end: 14 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+
+                //Barre de Vie
+                this.anims.create({
+                    key: 'BarreDeVie1',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 0, end: 0 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie2',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 1, end: 1 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie3',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 2, end: 2 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie4',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 3, end: 3 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie5',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 4, end: 4 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+
+                //ListeCarte
+                this.anims.create({
+                    key : 'Frame1',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 0, end : 0}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame2',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 1, end : 1}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame3',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 2, end : 2}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame4',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 3, end : 3}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                //Anims Chevalier
+                this.anims.create({
+                    key : 'knightwalkRight',
+                    frames : this.anims.generateFrameNumbers('chevalier', {start : 0, end :8}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                this.anims.create({
+                    key : 'knightwalkLeft',
+                    frames : this.anims.generateFrameNumbers('chevalier', {start : 9, end :17}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                this.anims.create({
+                    key : 'knightIddle',
+                    frames : this.anims.generateFrameNumbers('chevalier', {start : 18, end :21}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                //Barre Photo
+                this.anims.create({
+                    key : 'PhotoFrame1',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 0, end : 0}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'PhotoFrame2',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 1, end : 1}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'PhotoFrame3',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 2, end : 2}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'PhotoFrame4',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 3, end : 3}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                //Camera
+                this.cameras.main.setBounds(0, 0, 7680, 1248);
+                this.cameras.main.setSize(800, 600);
+                this.cameras.main.startFollow(this.player);
+
+                this.physics.world.setBounds(0,0, 7680, 1248)
+
+                //Cursors
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.keys = this.input.keyboard.addKeys({
+                    a: Phaser.Input.Keyboard.KeyCodes.A,
+                    p: Phaser.Input.Keyboard.KeyCodes.P,
+                    z: Phaser.Input.Keyboard.KeyCodes.Z,
+                    m: Phaser.Input.Keyboard.KeyCodes.M,
+                    e: Phaser.Input.Keyboard.KeyCodes.E
+
+                });
+            }
+
+            //Fonctions
+            
+            cleanProj(proj, colliders){
+                proj.destroy();
+            };
+            cleanProj2(proj2, colliders){
+                proj2.destroy();
+            };
+            
+            triggerFollow(player, hitbox){
+                if (this.poursuite == true){
+                    if (this.player.x <= this.chevalier1.x){
+                        this.chevalier1.setVelocityX(-50);
+                        this.chevalier1.anims.play('knightwalkLeft', true)
+                    }
+                    else if (this.player.x >= this.chevalier1.x){
+                        this.chevalier1.setVelocityX(50);
+                        this.chevalier1.anims.play('knightwalkRight', true)
+                    }
+                }
+
+                else (this.chevalier1.anims.play('knightIddle',))
+            }
+
+            //Chevaliers
+
+            killKnight1(proj, chevalier1){
+                if (this.poursuite == true){
+                    proj.destroy();
+                }
+                else if (this.poursuite == false){
+                    proj.destroy();
+                    this.chevalier1.destroy();
+                    this.chevalierDead = true;
+                    this.hitbox.destroy();
+                }
+            }
+
+            killKnight2(proj2, chevalier1){
+                if (this.poursuite == true){
+                    proj2.destroy();
+                }
+                else if (this.poursuite == false){
+                    proj2.destroy();
+                    this.chevalier1.destroy();
+                    this.chevalierDead = true;
+                    this.hitbox.destroy();
+                }
+
+            }
+            
+
+            hitMobChevalier(player, chevalier1){
+                if (this.invincible == false && this.poursuite == true){
+                this.vieJoueur -= 1
+                this.invincible = true;
+                }
+            };
+
+            hitMobEnfant(player, mobEnfant){
+                if (this.invincible == false){
+                this.vieJoueur -= 1
+                this.invincible = true;
+                }
+            };
+
+            stunChevalier(flash, chevalier1){
+                this.poursuite = false;
+            }
+
+            killMob1Proj(proj, mobEnfant){
+                proj.destroy();
+                mobEnfant.destroy();
+                this.mobDead = true;
+            };
+
+            killMob1Proj2(proj2, mobEnfant){
+                proj2.destroy();
+                mobEnfant.destroy();
+                this.mobDead = true;
+            };
+
+            recupHealthpack(player, healthpack){
+                healthpack.destroy();
+                if (this.vieJoueur < this.vieJoueurMax){
+                    this.vieJoueur += 1
+                }
+            };
+
+
+            update() {
+
+            //Coordonnées
+            console.log(this.player.x, this.player.y)
+
+            //Frame d'invulnerabilite
+            if (this.invincible == true){
+                this.timerInvincible -= 1;
+            }
+            if (this.timerInvincible <= 0 ){
+                this.invincible = false;
+                this.timerInvincible = 100;
+            }
+
+            if (this.invincible == true){
+                this.player.setTint(0xff0000);
+            }
+
+            if (this.invincible == false){
+                this.player.setTint();
+            }
+
+            //Deplacement Joueur
+            if (this.cursors.left.isDown) {
+                    this.player.direction = 'left';
+                    this.player.setVelocityX(-150);
+                    this.player.anims.play('walkLeft', true);
+                }
+            else if (this.cursors.right.isDown) {
+                this.player.direction = 'right';
+                this.player.setVelocityX(150);
+                this.player.anims.play('walkRight', true);
+                }
+            else {
+                if (this.player.direction == 'left'){
+                    this.player.setVelocityX(0);
+                    this.player.anims.play('idleLeft', true);
+                }
+                if (this.player.direction == 'right'){
+                    this.player.setVelocityX(0);
+                    this.player.anims.play('idleRight', true);
+                }
+                }
+            if (Phaser.Input.Keyboard.JustDown(this.keys.z) && this.player.body.onFloor()) {
+                this.player.setVelocityY(-240);
+            };
+
+            //Barre de vie
+            if (this.recupC == true){
+
+                if (this.vieJoueur == 5){
+                    this.BarredeVie1 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie1.anims.play('BarreDeVie1', true);
+                    this.BarredeVie1.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 4){
+                    this.BarredeVie2 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie2.anims.play('BarreDeVie2', true);
+                    this.BarredeVie2.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 3){
+                    this.BarredeVie3 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie3.anims.play('BarreDeVie3', true);
+                    this.BarredeVie3.setScrollFactor(0);
+                 }
+                if (this.vieJoueur == 2){
+                    this.BarredeVie4 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie4.anims.play('BarreDeVie4', true);
+                    this.BarredeVie4.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 1){
+                    this.BarredeVie5 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie5.anims.play('BarreDeVie5', true);
+                    this.BarredeVie5.setScrollFactor(0);
+                }
+            }
+
+                //ItemCarteFrame
+                if (this.CarteMob1Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame1', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                if (this.CarteMob2Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame2', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                if (this.CarteMob3Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame3', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                if (this.CarteMob4Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame4', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+            //Apparition du Phasmopedia
+            if (this.recupL == true){
+                this.LogoP = this.phasmoLogo.create(600, 40, 'logoPhasmo');
+                this.LogoP.setScrollFactor(0);
+            }
+
+            //Apparition de Carte
+            if (this.recupC == true){
+                this.LogoC = this.CarteLogo.create(650, 40, 'logoCarte');
+                this.LogoC.setScrollFactor(0);
+            }
+
+            //Apparition de l'appareil
+            if (this.recupAppareil == true){
+                this.LogoA = this.AppareilLogo.create(700, 40, 'logoAppareil');
+                this.LogoA.setScrollFactor(0);
+            } 
+            
+            //Apparition du Phasmo
+            if (this.recupL==true && Phaser.Input.Keyboard.JustDown(this.keys.p) && this.phasmoActive==false && this.livrecree==false){
+                this.phasmoActive = true;
+                this.phasmopediaLivre = this.phasmopedia.create(400, 300, 'phasmopediaImage');
+                this.phasmopediaLivre.setScrollFactor(0);
+                this.phasmopediaLivre.setDepth(20);
+                this.livrecree=true;
+            }
+            if (Phaser.Input.Keyboard.JustDown(this.keys.m) && this.phasmoActive == true){
+                this.phasmopediaLivre.destroy();
+                this.phasmoActive = false;
+                this.livrecree=false;
+            }
+
+            //Direction du tir
+            if (this.cursors.right.isDown){
+                this.player.direction == 'right';
+            }
+            if (this.cursors.left.isDown){
+                this.player.direction == 'left';
+            }
+
+            //Tir
+            if (Phaser.Input.Keyboard.JustDown(this.keys.a) && this.tir == true){
+                if (this.player.direction == 'left'){
+                    this.proj = this.projoCarte.create(this.player.x, this.player.y, 'projoCarte');
+                    this.proj.setVelocityX(-500);
+                    this.proj.body.setSize(22 ,10,true)
+                    this.proj.setOffset(8, 10);
+                    }
+                if (this.player.direction == 'right'){
+                    this.proj2 = this.projoCarte2.create(this.player.x, this.player.y, 'projoCarte2');
+                    this.proj2.setVelocityX(500);
+                    this.proj2.body.setSize(22 ,10,true)
+                    this.proj2.setOffset(8, 10);
+                    }
+            }
+
+            //Barre de vie
+            if (this.recupC == true){
+
+                if (this.vieJoueur == 5){
+                    this.BarredeVie1 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie1.anims.play('BarreDeVie1', true);
+                    this.BarredeVie1.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 4){
+                    this.BarredeVie2 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie2.anims.play('BarreDeVie2', true);
+                    this.BarredeVie2.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 3){
+                    this.BarredeVie3 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie3.anims.play('BarreDeVie3', true);
+                    this.BarredeVie3.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 2){
+                    this.BarredeVie4 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie4.anims.play('BarreDeVie4', true);
+                    this.BarredeVie4.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 1){
+                    this.BarredeVie5 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie5.anims.play('BarreDeVie5', true);
+                    this.BarredeVie5.setScrollFactor(0);
+                }
+}
+
+            //Mob Chevalier
+
+            if (this.chevalierSpawn1 == true){
+                this.chevalier1 = this.mobChevalier.create(4213, 880, 'chevalier').setScale(2);
+                this.chevalierSpawn1 = false;
+                this.chevalier1.body.setSize(15 ,35,true)
+                this.chevalier1.setOffset(8, 6);
+            }
+
+            //TriggerBox                             
+                this.hitbox.x = this.chevalier1.x;
+                this.hitbox.y = this.chevalier1.y;
+
+            //Mob Enfant1
+            if (this.recupC == true && this.mobSpawn == true){
+                    this.mobSpawn = false;
+                    this.mobEnfant1 = this.mobEnfant.create(445, 886, 'Mob1');
+                    this.mobEnfant1.setVelocityX(-100);
+                    this.mobEnfant1.setBounce(1);
+                
+            }
+            
+
+            //Mob Enfant2
+                if (this.recupC == true && this.mobSpawn2 == true){
+                    this.mobSpawn2 = false;
+                    this.mobEnfant2 = this.mobEnfant.create(743, 886, 'Mob1');                    
+                    this.mobEnfant2.setVelocityX(-100);
+                    this.mobEnfant2.setBounce(1);
+                }
+
+            //Mob Enfant3
+                if (this.recupC == true && this.mobSpawn3 == true){
+                    this.mobSpawn3 = false;
+                    this.mobEnfant3 = this.mobEnfant.create(3046, 598.5, 'Mob1');                    
+                    this.mobEnfant3.setVelocityX(100);
+                    this.mobEnfant3.setBounce(1);
+                }
+
+             //Mob Enfant4
+                if (this.recupC == true && this.mobSpawn4 == true){
+                    this.mobSpawn4 = false;
+                    this.mobEnfant4 = this.mobEnfant.create(2948.5, 598.5, 'Mob1');                    
+                    this.mobEnfant4.setVelocityX(-100);
+                    this.mobEnfant4.setBounce(1);
+                }
+
+            //Mob Enfant5
+                if (this.recupC == true && this.mobSpawn5 == true){
+                    this.mobSpawn5 = false;
+                    this.mobEnfant5 = this.mobEnfant.create(4816, 886.5, 'Mob1');                    
+                    this.mobEnfant5.setVelocityX(-100);
+                    this.mobEnfant5.setBounce(1);
+                }
+
+            //Mob Enfant6
+                if (this.recupC == true && this.mobSpawn6 == true){
+                    this.mobSpawn6 = false;
+                    this.mobEnfant6 = this.mobEnfant.create(5253, 886.5, 'Mob1');                    
+                    this.mobEnfant6.setVelocityX(-100);
+                    this.mobEnfant6.setBounce(1);
+                }
+
+            //Mob Enfant7
+                if (this.recupC == true && this.mobSpawn7 == true){
+                    this.mobSpawn7 = false;
+                    this.mobEnfant7 = this.mobEnfant.create(5696, 886.5, 'Mob1');                    
+                    this.mobEnfant7.setVelocityX(-100);
+                    this.mobEnfant7.setBounce(1);
+                }
+
+            //Mob Enfant8
+                if (this.recupC == true && this.mobSpawn8 == true ){
+                    this.mobSpawn8 = false;
+                    this.mobEnfant8 = this.mobEnfant.create(4436, 406.5, 'Mob1');                    
+                    this.mobEnfant8.setVelocityX(-100);
+                    this.mobEnfant8.setBounce(1);
+                }
+            //Mob Enfant9
+                if (this.recupC == true && this.mobSpawn9 == true){
+                    this.mobSpawn9 = false;
+                    this.mobEnfant9 = this.mobEnfant.create(4961, 406.5, 'Mob1');                    
+                    this.mobEnfant9.setVelocityX(100);
+                    this.mobEnfant9.setBounce(1);
+                }
+            //Mob Enfant10
+                if (this.recupC == true && this.mobSpawn10 == true){
+                    this.mobSpawn10 = false;
+                    this.mobEnfant10 = this.mobEnfant.create(4500, 406.5, 'Mob1');                    
+                    this.mobEnfant10.setVelocityX(100);
+                    this.mobEnfant10.setBounce(1);
+                }
+            //Mob Enfant11
+                if (this.recupC == true && this.mobSpawn11 == true){
+                    this.mobSpawn11 = false;
+                    this.mobEnfant11 = this.mobEnfant.create(4861, 406.5, 'Mob1');                    
+                    this.mobEnfant11.setVelocityX(100);
+                    this.mobEnfant11.setBounce(1);
+                }
+            //Mob Enfant11
+                if (this.recupC == true && this.mobSpawn12 == true){
+                    this.mobSpawn12 = false;
+                    this.mobEnfant12 = this.mobEnfant.create(7364, 406.5, 'Mob1');                    
+                    this.mobEnfant12.setVelocityX(100);
+                    this.mobEnfant12.setBounce(1);
+                }
+
+
+            //AppareilPhoto
+            if (this.recupAppareil == true){
+                if (this.jaugeFlash == 3){
+                    this.barresPhoto1 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                    this.barresPhoto1.anims.play('PhotoFrame1', true);
+                    this.barresPhoto1.setScrollFactor(0);
+                }
+                if (this.jaugeFlash == 2){
+                    this.barresPhoto2 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                    this.barresPhoto2.anims.play('PhotoFrame2', true)
+                    this.barresPhoto2.setScrollFactor(0);
+                }
+                if (this.jaugeFlash == 1){
+                    this.barresPhoto3 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                    this.barresPhoto3.anims.play('PhotoFrame3', true)
+                    this.barresPhoto3.setScrollFactor(0);
+                }
+                if (this.jaugeFlash == 0){
+                    this.barresPhoto4 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                    this.barresPhoto4.anims.play('PhotoFrame4', true)
+                    this.barresPhoto4.setScrollFactor(0);
+                }
+
+            };     
+            
+            //Flash Chevalier
+            if (Phaser.Input.Keyboard.JustDown(this.keys.e) && this.recupAppareil == true && this.lifeFlash == false && this.jaugeFlash >= 1){
+                    this.flashImage = this.flash.create(this.player.x, this.player.y, 'Flash').setScale(1.1);
+                    this.lifeFlash = true;
+                    this.jaugeFlash -=1;
+                }
+
+                if (this.lifeFlash == true){
+                    this.timerFlash -= 1;
+                }
+
+                if (this.timerFlash <= 0){
+                    this.flashImage.destroy();
+                    this.lifeFlash = false;
+                    this.timerFlash = 5;
+                }
+                if (this.jaugeFlash < 3){
+                    this.timerRecupFlash -=1
+                }
+
+                if (this.timerRecupFlash <= 0){
+                    this.jaugeFlash += 1;
+                    this.timerRecupFlash = 100;
+                }
+
+                //Flash Chevalier
+
+                if (this.poursuite == false){
+                    this.timerStun -=1
+                    if (this.chevalierDead == false){
+                        this.chevalier1.setVelocity(0);
+                        this.chevalier1.anims.play('knightIddle', true)
+                    }
+                }
+
+                if (this.timerStun <= 0){
+                    this.poursuite = true;
+                    this.timerStun = 70
+                }
+
+                //Healthpack
+                if (this.recupHealth1 == true){
+                    this.pillule1 = this.healthpack.create(2280, 454.5, 'Healthpack');
+                    this.recupHealth1 = false;
+                }
+
+                //Healthpack
+                if (this.recupHealth2== true){
+                    this.pillule2 = this.healthpack.create(4705.5, 406.5, 'Healthpack');
+                    this.recupHealth2 = false;
+                }
+
+                
+                //Changement de scène
+                if (this.player.x >= 7662 && this.player.y >= 406.5) {
+                    this.scene.start('Salle5', {vieJoueur : this.vieJoueur})
+                }
+                
+            }
+        }
+
+        class Salle5 extends Phaser.Scene {
+            constructor() {
+                super("Salle5");
+                //Général
+                this.player;
+                this.cursors;
+                this.gameOver = false;
+                this.cameras;
+                this.vieJoueurMax = 5
+                this.BarresdeVie;
+                this.barresPhoto;
+                this.inventaire;
+                //Phasmopedia
+                this.phasmoItem;
+                this.phasmopedia;
+                this.phasmoLogo;
+                this.phasmoActive = false;
+                this.phasmopediaLivre;
+                this.recupL=true;
+                this.livrecree=false;
+                //Tir
+                this.tir = true;
+                this.proj;
+                this.proj2;
+                this.carteVierge;
+                this.recupC = true;
+                //Mob
+                this.mobCrane;
+                this.carteMobChevalier;
+                this.dropMobChevalier = true;
+                this.CarteMob3Recup = false;
+                this.CarteMob2Recup = true;
+                this.CarteMob1Recup = true;
+                this.TeteChev;
+                this.chevalierSpawn1 = true;
+                this.timerStun = 70;
+                this.poursuite = true;
+                this.chevalierDead = false;
+                this.crane1Spawn = true;
+                this.crane2Spawn = true;
+                this.crane1BouclierSpawn = true;
+                this.crane2BouclierSpawn = true;
+
+                //Frame invul
+                this.invincible = false,
+                this.timerInvincible = 100;
+                //Healthpack
+                this.healthpack;
+                this.recupHealth = true;
+                //Appareil photo
+                this.timerFlash = 5
+                this.timerRecupFlash = 100;
+                this.flash;
+                this.recupAppareil = true;
+                this.jaugeFlash = 3;
+                this.lifeFlash = false;
+                this.AppareilLogo;
+                //Healthpack
+                this.healthpack;
+                this.recupHealth1 = true;
+                this.recupHealth2 = true;
+                this.recupHealth3 = true;
+
+                //Cartes
+                this.carteCraneImage;
+                this.spawnCarteCrane = true;
+                this.craneDead1 = false;
+                this.craneDead2= false;
+
+                //Block
+                this.block;
+                this.bouclierCrane;
+            }
+
+            init(data){
+                this.vieJoueur = data.vieJoueur
+            }
+
+            preload() {
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.spritesheet('player', 'assets/Hero.png',
+                    { frameWidth: 32, frameHeight: 32 });
+                this.load.image('logoPhasmo', 'assets/LogoPhasmo.png');
+                this.load.image('projoCarte', 'assets/ProjCarte.png');
+                this.load.image('projoCarte2', 'assets/ProjCarteGauche.png');
+                this.load.image('logoCarte', 'assets/LogoCarteVierge.png');
+                this.load.image('phasmopediaImage', 'assets/LivreOuvert.png');
+                this.load.spritesheet('BarreDeVie', 'assets/BarreDeVie.png',
+                    { frameWidth : 134, frameHeight : 36});
+                this.load.spritesheet('FrameCartes', 'assets/ItemFramecartes.png',
+                    {frameWidth : 128, frameHeight : 32})
+                this.load.image('TeteChevalier', 'assets/TeteChevalier.png');
+                this.load.image('carteChevalier', 'assets/CarteChevalier.png');
+                this.load.spritesheet('chevalier', 'assets/Chevalier.png',
+                    {frameWidth : 32, frameHeight : 40})
+                this.load.image('Mob1', 'assets/EnfantMonstre.png');
+                this.load.image('hitboxChevalier', 'assets/hitBoxInvisible2.png');
+                this.load.image('Photo', 'assets/AppareilPhoto.png');
+                this.load.image('Flash', 'assets/Flash.png') 
+                this.load.spritesheet('BarrePhoto', 'assets/BarrePhoto.png',
+                    {frameWidth: 82, frameHeight : 27})
+
+                this.load.image('logoAppareil', 'assets/LogoAppareil.png');
+                this.load.image('Healthpack', 'assets/Pillule.png');
+                this.load.image('Crane', 'assets/Crane.png');
+                this.load.image('hitboxCrane', 'assets/hitBoxInvisible3.png');
+                this.load.image('block', 'assets/Blocage.png');
+                this.load.image('Bouclier', 'assets/BouclierCrane.png');
+                this.load.image('carteCrane', 'assets/CarteCrane.png');
+
+                this.load.image('assetsNiv5', 'assets/Niv5.png');
+                this.load.tilemapTiledJSON('salleNiveau5', 'SalleNV5.json');
+
+            }
+
+            create() {
+
+                //Map Tiled
+                this.salleNIV5 = this.add.tilemap('salleNiveau5');
+                this.tileset = this.salleNIV5.addTilesetImage(
+                    "Niv5",
+                    "assetsNiv5",
+                );
+
+                this.fond = this.salleNIV5.createLayer(
+                    "Fond",
+                    this.tileset
+                );
+
+                this.assets = this.salleNIV5.createLayer(
+                    "Assets",
+                    this.tileset
+                );
+
+                this.colliders = this.salleNIV5.createLayer(
+                    "Colliders",
+                    this.tileset
+                );
+                
+                this.collidersMob = this.salleNIV5.createLayer(
+                    "CollidersMob",
+                    this.tileset
+                );
+
+                this.colliders.setScale(1.5);
+                this.collidersMob.setScale(1.5);
+                this.assets.setScale(1.5);
+                this.fond.setScale(1.5);
+                
+
+                //Collisions
+                this.colliders.setCollisionByProperty({estSolide : true});
+                this.collidersMob.setCollisionByProperty({estSolide : true});
+                this.assets.setCollisionByProperty({estVide : true});
+
+                //Joueur
+                this.player = this.physics.add.sprite(60, 934.5, 'player').setScale(1.5).refreshBody();
+                this.player.body.setSize(20,27,true)
+                this.player.setOffset(8, 6);
+                this.player.setCollideWorldBounds(true);
+                this.physics.add.collider(this.player, this.colliders);
+                this.physics.add.collider(this.player, this.assets);
+
+                //Mob
+                this.mobCrane = this.physics.add.group();
+                this.physics.add.overlap(this.player, this.mobCrane, this.hitMobCrane, null, this);
+
+                this.hitbox1 = this.physics.add.sprite(0,0, 'hitboxCrane');
+                this.hitbox2 = this.physics.add.sprite(0,0, 'hitboxCrane');
+                this.hitbox3 = this.physics.add.sprite(0,0, 'hitboxCrane');
+                this.hitbox4 = this.physics.add.sprite(0,0, 'hitboxCrane');
+                this.hitbox5 = this.physics.add.sprite(0,0, 'hitboxCrane');
+                this.physics.add.overlap(this.player, this.hitbox1, this.aggro, null, this);
+                this.hitbox1.body.allowGravity = false;
+                this.physics.add.overlap(this.player, this.hitbox2, this.aggro2, null, this);
+                this.hitbox2.body.allowGravity = false;
+                this.physics.add.overlap(this.player, this.hitbox3, this.aggro3, null, this);
+                this.hitbox3.body.allowGravity = false;
+                this.physics.add.overlap(this.player, this.hitbox4, this.aggro4, null, this);
+                this.hitbox4.body.allowGravity = false;
+                this.physics.add.overlap(this.player, this.hitbox5, this.aggro5, null, this);
+                this.hitbox5.body.allowGravity = false;
+
+                this.bouclierCrane = this.physics.add.group();
+                this.physics.add.overlap(this.player, this.bouclierCrane, this.hitMobCrane,null, this);
+
+                this.carteCraneImage = this.physics.add.group();
+                this.physics.add.collider(this.carteCraneImage, this.colliders);
+                this.physics.add.overlap(this.player, this.carteCraneImage, this.recupCarteCrane, null, this);
+                
+
+                //Bloc
+                this.block = this.physics.add.staticGroup();
+                this.blocage = this.block.create(696.5, 735, 'block');
+                this.physics.add.collider(this.player, this.blocage);
+
+
+                //Soin
+                this.healthpack = this.physics.add.group();
+                this.physics.add.collider(this.healthpack, this.colliders);
+                this.physics.add.overlap(this.player, this.healthpack, this.recupHealthpack, null, this);
+ 
+                //Cursors et Logo
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+                this.CarteLogo = this.physics.add.staticGroup();
+                this.FrameCartes = this.physics.add.staticGroup();
+                this.AppareilLogo = this.physics.add.staticGroup();
+
+                //Barre de vie et barre photo
+                this.BarresdeVie = this.physics.add.staticGroup();
+                this.barresPhoto = this.physics.add.staticGroup();
+                this.AppareilLogo = this.physics.add.staticGroup();
+
+                //Phasmopedia
+                this.phasmoLogo = this.physics.add.staticGroup();
+                this.phasmopedia = this.physics.add.staticGroup();
+
+                //Tir et Flash
+                this.projoCarte = this.physics.add.group({
+                    allowGravity: false,
+                });
+                
+                this.projoCarte2 = this.physics.add.group({
+                    allowGravity: false,
+                });
+                this.physics.add.collider(this.projoCarte, this.colliders, this.cleanProj, null, this);
+                this.physics.add.collider(this.projoCarte2, this.colliders, this.cleanProj2, null, this);
+
+                this.physics.add.collider(this.projoCarte, this.bouclierCrane, this.destroyShield, null, this);
+                this.physics.add.collider(this.projoCarte2, this.bouclierCrane, this.destroyShield2, null, this);
+
+                this.physics.add.overlap(this.player, this.mobCrane, this.hitMobCrane, null, this);
+
+
+                this.physics.add.overlap(this.projoCarte, this.mobCrane, this.killCrane1, null, this);
+                this.physics.add.overlap(this.projoCarte2, this.mobCrane, this.killCrane2, null, this);
+
+                this.physics.add.overlap(this.projoCarte, this.crane2, this.killCrane12, null, this);
+                this.physics.add.overlap(this.projoCarte2, this.crane2, this.killCrane22, null, this);
+
+
+                this.flash = this.physics.add.staticGroup();
+
+                //Anims de Perso
+                this.anims.create({
+                    key: 'idleRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'idleLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkRight',
+                    frames: this.anims.generateFrameNumbers('player', { start: 15, end: 22 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+                this.anims.create({
+                    key: 'walkLeft',
+                    frames: this.anims.generateFrameNumbers('player', { start: 8, end: 14 }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+
+                //Barre de Vie
+                this.anims.create({
+                    key: 'BarreDeVie1',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 0, end: 0 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie2',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 1, end: 1 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie3',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 2, end: 2 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie4',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 3, end: 3 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+                this.anims.create({
+                    key: 'BarreDeVie5',
+                    frames: this.anims.generateFrameNumbers('BarreDeVie', { start: 4, end: 4 }),
+                    frameRate: 8,
+                    repeat: -1
+                })
+
+                //ListeCarte
+                this.anims.create({
+                    key : 'Frame1',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 0, end : 0}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame2',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 1, end : 1}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame3',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 2, end : 2}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'Frame4',
+                    frames : this.anims.generateFrameNumbers('FrameCartes', {start : 3, end : 3}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                //Barre Photo
+                    this.anims.create({
+                    key : 'PhotoFrame1',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 0, end : 0}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'PhotoFrame2',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 1, end : 1}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'PhotoFrame3',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 2, end : 2}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+                this.anims.create({
+                    key : 'PhotoFrame4',
+                    frames : this.anims.generateFrameNumbers('BarrePhoto', {start : 3, end : 3}),
+                    frameRate : 8,
+                    repeat : -1
+                })
+
+                //Camera
+                this.cameras.main.setBounds(0, 0, 4320, 1344);
+                this.cameras.main.setSize(800, 600);
+                this.cameras.main.startFollow(this.player);
+
+                this.physics.world.setBounds(0,0, 4320, 1344)
+
+                //Cursors
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.keys = this.input.keyboard.addKeys({
+                    a: Phaser.Input.Keyboard.KeyCodes.A,
+                    p: Phaser.Input.Keyboard.KeyCodes.P,
+                    z: Phaser.Input.Keyboard.KeyCodes.Z,
+                    m: Phaser.Input.Keyboard.KeyCodes.M,
+                    e: Phaser.Input.Keyboard.KeyCodes.E
+
+                });
+
+            }
+
+            cleanProj(proj, colliders){
+                proj.destroy();
+            };
+            cleanProj2(proj2, colliders){
+                proj2.destroy();
+            };
+
+            destroyShield(proj, bouclierCrane){
+                proj.destroy();
+                bouclierCrane.destroy();
+            }
+
+            destroyShield2(proj2, bouclierCrane){
+                proj2.destroy();
+                bouclierCrane.destroy();
+            }
+
+            
+            hitMobCrane(player, mobCrane){
+                if (this.invincible == false){
+                this.vieJoueur -= 1
+                this.invincible = true;
+                }
+            };
+
+            killCrane1(proj, crane1){
+                proj.destroy();
+                crane1.destroy();
+                this.hitbox1.destroy();
+                this.blocage.destroy();
+                this.craneDead1 = true;
+            } 
+            killCrane2(proj2, crane1){
+                proj2.destroy();
+                crane1.destroy();
+                this.hitbox1.destroy();
+                this.blocage.destroy();
+                this.craneDead1 = true
+            }
+
+            killCrane12(proj, crane2){
+                proj.destroy();
+                crane2.destroy();
+                this.hitbox2.disableBody(true, true);
+                this.craneDead1 = true;
+            } 
+            killCrane22(proj2, crane2){
+                proj2.destroy();
+                crane2.destroy();
+                this.hitbox2.disableBody(true, true);
+                this.craneDead2 = true
+            }
+            
+            recupHealthpack(player, healthpack){
+                healthpack.destroy();
+                if (this.vieJoueur < this.vieJoueurMax){
+                    this.vieJoueur += 1
+                }
+            };
+
+            recupCarteCrane(player, carteCraneImage){
+                carteCraneImage.destroy();
+                this.CarteMob3Recup = true;
+
+            }
+
+            aggro(player, hitbox1){
+                if (this.craneDead1 == false){
+                    if (this.player.x <= this.crane1.x){
+                        this.crane1.setVelocityX(-80);
+                    }
+                    else if (this.player.x >= this.crane1.x){
+                        this.crane1.setVelocityX(80)
+                    }
+                    if (this.player.y <= this.crane1.y){
+                        this.crane1.setVelocityY(-80);
+                    }
+                    else if (this.player.y >= this.crane1.y){
+                        this.crane1.setVelocityY(80);
+                    }
+                    }
+            }
+
+            aggro2(player, hitbox2){
+                if (this.craneDead2 == false){
+                    if (this.player.x <= this.crane2.x){
+                        this.crane2.setVelocityX(-80);
+                    }
+                    else if (this.player.x >= this.crane2.x){
+                        this.crane2.setVelocityX(80)
+                    }
+                    if (this.player.y <= this.crane2.y){
+                        this.crane2.setVelocityY(-80);
+                    }
+                    else if (this.player.y >= this.crane2.y){
+                        this.crane2.setVelocityY(80);
+                    }
+                    }
+            }
+
+
+
+            update() {
+
+                //Coordonnées
+                console.log(this.player.x, this.player.y)
+
+                //Frame d'invulnerabilite
+                if (this.invincible == true){
+                    this.timerInvincible -= 1;
+                }
+                if (this.timerInvincible <= 0 ){
+                    this.invincible = false;
+                    this.timerInvincible = 100;
+                }
+
+                if (this.invincible == true){
+                    this.player.setTint(0xff0000);
+                }
+
+                if (this.invincible == false){
+                    this.player.setTint();
+                }
+
+            //Deplacement Joueur
+            if (this.cursors.left.isDown) {
+                    this.player.direction = 'left';
+                    this.player.setVelocityX(-150);
+                    this.player.anims.play('walkLeft', true);
+                }
+            else if (this.cursors.right.isDown) {
+                this.player.direction = 'right';
+                this.player.setVelocityX(150);
+                this.player.anims.play('walkRight', true);
+                }
+            else {
+                if (this.player.direction == 'left'){
+                    this.player.setVelocityX(0);
+                    this.player.anims.play('idleLeft', true);
+                }
+                if (this.player.direction == 'right'){
+                    this.player.setVelocityX(0);
+                    this.player.anims.play('idleRight', true);
+                }
+            }
+
+            if (Phaser.Input.Keyboard.JustDown(this.keys.z) && this.player.body.onFloor()) {
+                this.player.setVelocityY(-240);
+            };
+
+            //Barre de vie
+            if (this.recupC == true){
+
+                if (this.vieJoueur == 5){
+                    this.BarredeVie1 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie1.anims.play('BarreDeVie1', true);
+                    this.BarredeVie1.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 4){
+                    this.BarredeVie2 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie2.anims.play('BarreDeVie2', true);
+                    this.BarredeVie2.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 3){
+                    this.BarredeVie3 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie3.anims.play('BarreDeVie3', true);
+                    this.BarredeVie3.setScrollFactor(0);
+                 }
+                if (this.vieJoueur == 2){
+                    this.BarredeVie4 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie4.anims.play('BarreDeVie4', true);
+                    this.BarredeVie4.setScrollFactor(0);
+                }
+                if (this.vieJoueur == 1){
+                    this.BarredeVie5 = this.BarresdeVie.create(100,50, 'BarreDeVie').setScale(1.3);
+                    this.BarredeVie5.anims.play('BarreDeVie5', true);
+                    this.BarredeVie5.setScrollFactor(0);
+                }
+            }
+
+            //Cranes
+            if (this.recupC == true && this.crane1Spawn == true){
+                this.crane1 = this.mobCrane.create(500, 800, 'Crane').setScale(1.2);
+                this.crane1Spawn = false;
+                this.crane1.body.allowGravity = false;
+            }
+
+            if (this.spawnCarteCrane == true && this.craneDead1 == true){
+                this.spawnCarteCrane = false;
+                this.carteCrane = this.carteCraneImage.create(this.crane1.x, this.crane1.y, 'carteCrane');
+            }
+
+            //Crane2
+            if (this.recupC == true && this.crane2Spawn == true){
+                this.crane2 = this.mobCrane.create(1511.5, 700, 'Crane').setScale(1.2);
+                this.crane2Spawn = false;
+                this.crane2.body.allowGravity = false;
+            }
+
+            //hitBox Cranes
+            this.hitbox1.x = this.crane1.x;
+            this.hitbox1.y = this.crane1.y;
+
+            if (this.crane1BouclierSpawn == true){
+                this.crane1BouclierSpawn = false;
+                this.bouclier = this.bouclierCrane.create(0, 0, 'Bouclier').setScale(1.2);
+                this.bouclier.body.allowGravity = false
+            }
+
+            this.bouclier.x = this.crane1.x;
+            this.bouclier.y = this.crane1.y;
+
+            //hitBox Cranes2
+            this.hitbox2.x = this.crane2.x;
+            this.hitbox2.y = this.crane2.y;
+
+            if (this.crane2BouclierSpawn == true){
+                this.crane2BouclierSpawn = false;
+                this.bouclier2 = this.bouclierCrane.create(0, 0, 'Bouclier').setScale(1.2);
+                this.bouclier2.body.allowGravity = false
+            }
+
+            this.bouclier2.x = this.crane2.x;
+            this.bouclier2.y = this.crane2.y;
+
+            //Apparition du Phasmopedia
+            if (this.recupL == true){
+                this.LogoP = this.phasmoLogo.create(600, 40, 'logoPhasmo');
+                this.LogoP.setScrollFactor(0);
+            }
+
+            //Apparition de Carte
+            if (this.recupC == true){
+                this.LogoC = this.CarteLogo.create(650, 40, 'logoCarte');
+                this.LogoC.setScrollFactor(0);
+            }
+
+            //Apparition de l'appareil
+            if (this.recupAppareil == true){
+                this.LogoA = this.AppareilLogo.create(700, 40, 'logoAppareil');
+                this.LogoA.setScrollFactor(0);
+            } 
+            
+            //Apparition du Phasmo
+            if (this.recupL==true && Phaser.Input.Keyboard.JustDown(this.keys.p) && this.phasmoActive==false && this.livrecree==false){
+                this.phasmoActive = true;
+                this.phasmopediaLivre = this.phasmopedia.create(400, 300, 'phasmopediaImage');
+                this.phasmopediaLivre.setScrollFactor(0);
+                this.phasmopediaLivre.setDepth(20);
+                this.livrecree=true;
+            }
+            if (Phaser.Input.Keyboard.JustDown(this.keys.m) && this.phasmoActive == true){
+                this.phasmopediaLivre.destroy();
+                this.phasmoActive = false;
+                this.livrecree=false;
+            }
+
+            //Direction du tir
+            if (this.cursors.right.isDown){
+                this.player.direction == 'right';
+            }
+            if (this.cursors.left.isDown){
+                this.player.direction == 'left';
+            }
+
+            //Tir
+            if (Phaser.Input.Keyboard.JustDown(this.keys.a) && this.tir == true){
+                if (this.player.direction == 'left'){
+                    this.proj = this.projoCarte.create(this.player.x, this.player.y, 'projoCarte');
+                    this.proj.setVelocityX(-500);
+                    this.proj.body.setSize(22 ,10,true)
+                    this.proj.setOffset(8, 10);
+                    }
+                if (this.player.direction == 'right'){
+                    this.proj2 = this.projoCarte2.create(this.player.x, this.player.y, 'projoCarte2');
+                    this.proj2.setVelocityX(500);
+                    this.proj2.body.setSize(22 ,10,true)
+                    this.proj2.setOffset(8, 10);
+                    }
+            }
+
+            //ItemCarteFrame
+                if (this.CarteMob4Recup == true){
+                    this.carteFrame4 = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame4.anims.play('Frame4', true);
+                    this.carteFrame4.setScrollFactor(0);
+                }
+                if (this.CarteMob3Recup == true){
+                    this.carteFrame3 = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame3.anims.play('Frame3', true);
+                    this.carteFrame3.setScrollFactor(0);
+                }
+                if (this.CarteMob2Recup == true){
+                    this.carteFrame2 = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame2.anims.play('Frame2', true);
+                    this.carteFrame2.setScrollFactor(0);
+                }
+                if (this.CarteMob1Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame1', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+            //AppareilPhoto
+            if (this.recupAppareil == true){
+                if (this.jaugeFlash == 3){
+                    this.barresPhoto1 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                    this.barresPhoto1.anims.play('PhotoFrame1', true);
+                    this.barresPhoto1.setScrollFactor(0);
+                }
+                if (this.jaugeFlash == 2){
+                    this.barresPhoto2 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                    this.barresPhoto2.anims.play('PhotoFrame2', true)
+                    this.barresPhoto2.setScrollFactor(0);
+                }
+                if (this.jaugeFlash == 1){
+                    this.barresPhoto3 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                    this.barresPhoto3.anims.play('PhotoFrame3', true)
+                    this.barresPhoto3.setScrollFactor(0);
+                }
+                if (this.jaugeFlash == 0){
+                    this.barresPhoto4 = this.barresPhoto.create(100, 100, 'BarrePhoto').setScale(1.2);
+                    this.barresPhoto4.anims.play('PhotoFrame4', true)
+                    this.barresPhoto4.setScrollFactor(0);
+                }
+
+            };
+            
+            //ItemCarteFrame
+            if (this.CarteMob1Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame1', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                if (this.CarteMob2Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame2', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                if (this.CarteMob3Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame3', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+
+                if (this.CarteMob4Recup == true){
+                    this.carteFrame = this.FrameCartes.create(280,45, 'FrameCartes');
+                    this.carteFrame.anims.play('Frame4', true);
+                    this.carteFrame.setScrollFactor(0);
+                }
+            
+            //Flash Chevalier
+            if (Phaser.Input.Keyboard.JustDown(this.keys.e) && this.recupAppareil == true && this.lifeFlash == false && this.jaugeFlash >= 1){
+                    this.flashImage = this.flash.create(this.player.x, this.player.y, 'Flash').setScale(1.1);
+                    this.lifeFlash = true;
+                    this.jaugeFlash -=1;
+                }
+
+                if (this.lifeFlash == true){
+                    this.timerFlash -= 1;
+                }
+
+                if (this.timerFlash <= 0){
+                    this.flashImage.destroy();
+                    this.lifeFlash = false;
+                    this.timerFlash = 5;
+                }
+                if (this.jaugeFlash < 3){
+                    this.timerRecupFlash -=1
+                }
+
+                if (this.timerRecupFlash <= 0){
+                    this.jaugeFlash += 1;
+                    this.timerRecupFlash = 100;
+                }
+            }
+
+
+        }
+
+
+        var config = {
+
+            type: Phaser.AUTO,
+            scale :{
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: 800, 
+                height: 600,
+                pixelArt: true,
+            },
+
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 500 },
+                    debug: true
+                }
+            },
+            input: { gamepad: true },
+            scene: [  EcranAcceuil, Intro, TestSallePorte, TestSalleN1, Salle2, Salle3, Salle4,Salle5,]
+        };
+        new Phaser.Game(config);
+
+    </script>
